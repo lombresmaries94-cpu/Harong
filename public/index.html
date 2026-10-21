@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d3b4c">
+<meta name="description" content="Harong: build and run a Bicol homestay.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Harong">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Harong – Bicol Homestay Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--sea:#0d3b4c;--coral:#ff5a4d;--sun:#ffc233;--leaf:#22b573;--mag:#e8337f;--cream:#fff4dc;--ink:#2a1d14;--sky:#3cc6d9;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}html,body{height:100%;margin:0}
+body{font-family:'Baloo 2',system-ui,sans-serif;background:var(--sea);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--sea);color:#fff}
+h1{margin:0;font-size:1.5rem;font-weight:800;color:var(--sun);letter-spacing:.5px}
+.pill{background:rgba(255,255,255,.14);border-radius:99px;padding:2px 12px;font-weight:700;white-space:nowrap}
+.pill b{color:var(--sun)}
+#stage{position:relative;flex:1 1 40%;min-height:220px;perspective:1100px;overflow:hidden;touch-action:none;cursor:grab;
+background:linear-gradient(#18a5c4 0%,#6fd6d0 45%,#ffd36b 62%,#ff8a5c 63%,#1fa86a 63.1%,#0e7d4d 100%)}
+#sun{position:absolute;left:14%;top:12%;width:64px;height:64px;border-radius:50%;background:radial-gradient(#fff6b0,#ffc233 60%,#ff9a3c);box-shadow:0 0 50px 20px rgba(255,200,60,.55)}
+#mayon{position:absolute;left:50%;top:calc(63% - 150px);width:420px;height:150px;margin-left:-60px;background:linear-gradient(#fff 0 22%,#8a5ad6 22% 55%,#5b3aa6);clip-path:polygon(50% 0,100% 100%,0 100%);opacity:.95}
+#world{position:absolute;left:50%;top:60%;width:0;height:0;transform-style:preserve-3d}
+#world *{transform-style:preserve-3d}
+.f{position:absolute;left:50%;top:50%;backface-visibility:visible}
+#crew{position:absolute;left:50%;top:32%;font-size:2rem;animation:bob .7s ease-in-out infinite alternate;display:none}
+@keyframes bob{to{transform:translateY(-12px) rotate(8deg)}}
+@media(prefers-reduced-motion:reduce){#crew{animation:none}}
+#panel{flex:0 0 auto;max-height:50%;overflow:auto;background:var(--cream);border-radius:22px 22px 0 0;padding:12px 14px 16px;box-shadow:0 -6px 0 var(--sun)}
+.dots{display:flex;gap:6px;margin-bottom:8px}
+.dot{flex:1;height:10px;border-radius:9px;background:#e6d3ac}.dot.on{background:var(--leaf)}.dot.cur{background:var(--sun)}
+h2{margin:0 0 4px;font-size:1.25rem;font-weight:800}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chip{border:2px solid var(--sea);background:#fff;border-radius:14px;padding:4px 10px;font:inherit;font-weight:700;cursor:pointer;color:var(--ink)}
+.chip.sel{background:var(--sea);color:#fff}
+.chip:focus-visible,.go:focus-visible{outline:3px solid var(--mag);outline-offset:2px}
+.bar{display:flex;height:22px;border-radius:11px;overflow:hidden;background:#eadbb8}
+.bar i{display:block;height:100%}
+.leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.85rem;font-weight:600;margin:6px 0}
+.leg span:before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);margin-right:4px}
+.go{width:100%;border:0;border-radius:16px;padding:10px;font:inherit;font-size:1.1rem;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--coral),var(--mag));cursor:pointer;box-shadow:0 4px 0 #9a1f55}
+.go:disabled{background:#b9a98a;box-shadow:0 4px 0 #8c7d62;cursor:not-allowed}
+.note{font-size:.85rem;margin:6px 0 0}.warn{color:#b3123d;font-weight:700}
+#inst,#snd{border:0;font:inherit;cursor:pointer;color:#fff}#inst[hidden]{display:none}#inst{background:var(--mag)}#inst:focus-visible,#snd:focus-visible{outline:3px solid var(--mag)}
+header{flex-wrap:wrap}
+#lb,#inst,#snd{padding:2px 10px}
+#lbm{position:fixed;inset:0;background:rgba(13,59,76,.82);display:none;align-items:flex-end;justify-content:center;z-index:20}
+#lbm.open{display:flex}
+#lbc{background:var(--cream);width:min(520px,100%);max-height:85%;overflow:auto;border-radius:22px 22px 0 0;padding:14px;box-shadow:0 -6px 0 var(--sun)}
+#lbc h2{display:flex;justify-content:space-between;align-items:center}
+#nmrow{display:flex;gap:6px;margin:6px 0 10px}
+#nmin{flex:1;min-width:0;border:2px solid var(--sea);border-radius:12px;padding:4px 10px;font:inherit;font-weight:600}
+.row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:#fff;margin:5px 0;font-weight:700}
+.row.me{background:#ffe9a8}.rk{width:28px;color:var(--mag)}.nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row small{font-weight:600;color:#6b5a44;display:block}
+.mini{border:0;border-radius:10px;padding:2px 12px;font:inherit;font-weight:700;background:var(--leaf);color:#fff;cursor:pointer}
+.mini:focus-visible,#nmin:focus-visible{outline:3px solid var(--mag);outline-offset:2px}
+#vbar{position:absolute;left:8px;right:8px;top:8px;z-index:5;display:none;justify-content:space-between;align-items:center;background:var(--mag);color:#fff;border-radius:14px;padding:4px 12px;font-weight:700}
+#vbar .mini{background:var(--sun);color:var(--ink)}
+.g{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;font-size:34px;line-height:44px;text-align:center;cursor:pointer;user-select:none;filter:drop-shadow(0 6px 3px rgba(0,0,0,.3))}
+.g .e{display:block}
+.g u{position:absolute;left:6px;top:-6px;height:5px;border-radius:3px;background:var(--leaf);display:none;width:32px}
+.g[data-st=q] u{display:block}
+.g[data-st=q]::after{content:'Check in?';position:absolute;left:50%;top:-32px;background:var(--sun);color:var(--ink);font:700 12px/1.2 'Baloo 2',sans-serif;padding:1px 8px;border-radius:10px;white-space:nowrap;animation:bub .7s ease-in-out infinite alternate}
+@keyframes bub{from{transform:translate(-50%,0)}to{transform:translate(-50%,-6px)}}
+.g[data-st=pop],.g[data-st=out]{pointer-events:none}
+.g.pop b{font:800 18px 'Baloo 2',sans-serif;color:#fff;text-shadow:0 2px 0 #1a6b3f,0 0 6px #000;white-space:nowrap}
+.gs{display:flex;justify-content:space-between;font-weight:700;margin:2px 0 4px}
+.r2{display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:3px 10px;margin:4px 0;font-weight:600}
+.r2 span{flex:1}.mini:disabled{background:#b9a98a;cursor:not-allowed}
+@media(prefers-reduced-motion:reduce){.g[data-st=q]::after{animation:none;transform:translateX(-50%)}}
+#toast{position:fixed;left:50%;top:64px;transform:translateX(-50%);background:var(--mag);color:#fff;padding:6px 16px;border-radius:99px;font-weight:700;display:none;z-index:9;max-width:90%;text-align:center}
+</style></head><body>
+<header><h1>Harong</h1><span class="pill">₱<b id="cash"></b></span><span class="pill">Day <b id="day"></b> · sweldo in <b id="pay"></b>d</span><button class="pill" id="lb" aria-label="Leaderboard">🏆</button><button class="pill" id="inst" hidden>Install</button><button class="pill" id="snd" aria-label="Toggle sound">🔊</button></header>
+<div id="stage"><div id="vbar"><span id="vtxt"></span><button class="mini" id="vback">Back home</button></div><div id="sun"></div><div id="mayon"></div><div id="world"><div id="scene"></div><div id="gl"></div></div><div id="crew">👷‍♂️🔨</div></div>
+<div id="panel"></div><div id="toast" role="status"></div>
+<div id="lbm"><div id="lbc" role="dialog" aria-label="Leaderboard"><h2>Top harongs <button class="mini" id="lbx">Close</button></h2><div id="nmrow"><input id="nmin" maxlength="16" placeholder="Your name (2 to 16 letters)" aria-label="Your name"><button class="mini" id="nmsv">Save name</button></div><div id="lbl"></div></div></div>
+<script>
+const T={mason:750,carpenter:750,painter:650,helper:500};
+const P=[{n:'Footings',m:2480,c:[['mason',1],['helper',1]]},{n:'Frame and walls',m:6865,c:[['carpenter',2],['helper',2]]},{n:'Roofing',m:4160,c:[['carpenter',1],['helper',1]]},{n:'Windows and doors',m:3900,c:[['carpenter',1]]},{n:'Finishing',m:850,c:[['painter',1]]}];
+const M={diy:{t:'DIY',l:0,d:3,q:70},kap:{t:'Kapitbahay crew',l:.85,d:1,q:85},con:{t:'Licensed contractor',l:1.3,d:.7,q:100}};
+const TICK=2500,KEY='harong-v1',fmt=n=>Math.round(n).toLocaleString('en-PH');
+let s={cash:28000,day:1,done:0,act:null,owed:0,mode:'kap',qs:[],wait:false,ts:Date.now()};
+let visiting=false;let fresh=true;
+try{const x=JSON.parse(localStorage.getItem(KEY));if(x){s=x;fresh=false}}catch(e){}
+const bootTs=fresh?0:s.ts;
+const norm=x=>{x.stay=x.stay||[];x.rep=x.rep??3;x.rn=x.rn||0;return x};norm(s);
+const $=id=>document.getElementById(id);
+function cost(i,mode){const p=P[i],m=M[mode];let l=0,wd=0,dd=0;p.c.forEach(([t,d])=>{l+=T[t]*d;wd+=d;dd=Math.max(dd,d)});
+ return{mat:p.m,lab:Math.round(l*m.l),meal:mode=='diy'?0:wd*100,days:Math.max(1,Math.ceil(dd*m.d)),permit:i==0?500:0}}
+const cap=()=>1+(s.done>=3)+(s.done>=5),rate=()=>350+s.done*150;
+function income(){return Math.round(cap()*rate()*.3)} // offline estimate only
+function save(){s.ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}if(window.cloudSave)window.cloudSave()}
+function toast(t){try{sfx()}catch(_){}const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',3200)}
+/* ---------- 3D helpers ---------- */
+const F=(w,h,tr,bg,ex='')=>`<i class="f" style="width:${w}px;height:${h}px;margin:${-h/2}px 0 0 ${-w/2}px;transform:${tr};background:${bg};${ex}"></i>`;
+function box(w,d,h,x,y,z,c){const p=`translate3d(${x}px,${y}px,${z}px) `;
+ return F(w,h,p+`translateY(${d/2}px) translateZ(${h/2}px) rotateX(-90deg)`,c.f)+F(w,h,p+`translateY(${-d/2}px) translateZ(${h/2}px) rotateX(-90deg)`,c.s)
+ +F(d,h,p+`translateX(${w/2}px) translateZ(${h/2}px) rotateZ(90deg) rotateX(-90deg)`,c.s)+F(d,h,p+`translateX(${-w/2}px) translateZ(${h/2}px) rotateZ(90deg) rotateX(-90deg)`,c.s)
+ +F(w,d,p+`translateZ(${h}px)`,c.t)}
+function roof(w,d,h,rh,ov,c1,c2,g){const half=d/2+ov,L=Math.hypot(half,rh),a=Math.atan2(rh,half)*180/Math.PI,W=w+ov*2;
+ const tri='clip-path:polygon(50% 0,0 100%,100% 100%)';
+ return F(W,L,`translate3d(0,${half/2}px,${h+rh/2}px) rotateX(${-a}deg)`,c1)+F(W,L,`translate3d(0,${-half/2}px,${h+rh/2}px) rotateX(${a}deg)`,c2)
+ +[1,-1].map(k=>F(d,rh,`translateX(${k*w/2}px) translateZ(${h+rh/2}px) rotateZ(90deg) rotateX(-90deg)`,g,tri)).join('')}
+const plank=(a,b)=>`repeating-linear-gradient(90deg,${a} 0 16px,${b} 16px 18px)`;
+function palm(x,y){let h=`<!--palm-->`+box(12,12,110,x,y,0,{f:'#8a5a2b',s:'#6e4520',t:'#a06a35'});
+ for(let a=0;a<360;a+=60)h+=F(100,26,`translate3d(${x}px,${y}px,112px) rotateZ(${a}deg) rotateY(28deg) translateX(46px)`,'linear-gradient(#35d17f,#12894c)','clip-path:polygon(0 40%,100% 50%,0 60%,12% 100%,12% 0);border-radius:0');
+ return h}
+function build(n=s.done){let h=F(560,440,'translateZ(0)','radial-gradient(#4fe08a,#17a05c)','border-radius:40px');
+ h+=F(300,240,'translateZ(1px)',n>=1?'repeating-conic-gradient(#e8d9b5 0 25%,#d4bf8f 0 50%) 0 0/30px 30px':'rgba(150,110,60,.5)','border-radius:14px');
+ if(n<2){ // kubo on stilts
+  [[-50,-40],[50,-40],[-50,40],[50,40]].forEach(([x,y])=>h+=box(10,10,46,x,y,0,{f:'#caa45c',s:'#a8823e',t:'#e0bd78'}));
+  h+=box(140,120,56,0,0,46,{f:plank('#e9c978','#c9a24c'),s:plank('#d8b560','#b38c3a'),t:'#f0d58c'});
+  h+=roof(140,120,102,54,16,'repeating-linear-gradient(#5fd15a 0 8px,#3da63a 8px 10px)','repeating-linear-gradient(#49bf48 0 8px,#2f9a30 8px 10px)','#d8b560');
+  h+=F(26,40,'translate3d(0,61px,70px) rotateX(-90deg)','#8a5a2b');
+ }else{
+  const wc=n>=5?{f:'#ffb23c',s:'#ee8f1a',t:'#ffd27a'}:{f:plank('#c58a54','#a46b3a'),s:plank('#b07744','#8f5b2e'),t:'#d9a066'};
+  h+=box(220,170,24,0,0,4,{f:'#9aa0a6',s:'#7d838a',t:'#b4bac0'});
+  h+=box(220,170,120,0,0,28,wc);
+  if(n>=3)h+=roof(220,170,148,70,16,'repeating-linear-gradient(#ff5a4d 0 12px,#d63a31 12px 14px)','repeating-linear-gradient(#e84a40 0 12px,#bd2f27 12px 14px)',wc.s);
+  if(n>=4){const y=86.5,z=96,sh=n>=5?'#e8337f':'#6b4423';
+   [-70,70].forEach(x=>h+=F(40,40,`translate3d(${x}px,${y}px,${z}px) rotateX(-90deg)`,'linear-gradient(135deg,#bff3ff,#3cc6d9)',`border:5px solid ${sh}`));
+   h+=F(40,70,`translate3d(0,${y}px,63px) rotateX(-90deg)`,n>=5?'#e8337f':'#6b4423','border-radius:20px 20px 0 0');
+   [-1,1].forEach(k=>h+=F(40,40,`translate3d(${k*110.6}px,0,${z}px) rotateZ(90deg) rotateX(-90deg)`,'linear-gradient(135deg,#bff3ff,#3cc6d9)',`border:5px solid ${sh}`))}
+ }
+ h+=palm(210,-130)+palm(-215,120);
+ $('scene').innerHTML=h}
+/* ---------- game loop ---------- */
+function tick(){s.day++;daily();
+ if(s.wait&&s.cash>=s.owed){s.cash-=s.owed;s.owed=0;s.wait=false;toast('Sweldo paid. Work resumes.')}
+ if(s.act&&!s.wait){s.act.left--;s.owed+=s.act.per;
+  if(s.act.left<=0){s.done++;s.qs.push(s.act.q);toast(P[s.done-1].n+' complete!');s.act=null;if(!visiting)build();if(s.done==5)toast('Harong is ready for guests!')}}
+ if(s.day%7==0&&s.owed>0){if(s.cash>=s.owed){s.cash-=s.owed;toast('Sweldo day: paid ₱'+fmt(s.owed));s.owed=0}else{s.wait=true;toast('Sweldo day: not enough cash. Work paused.')}}
+ save();ui()}
+function start(){const c=cost(s.done,s.mode),need=c.mat+c.permit;if(s.cash<need)return toast('Need ₱'+fmt(need)+' for materials');
+ s.cash-=need;s.act={left:c.days,total:c.days,per:(c.lab+c.meal)/c.days,q:M[s.mode].q};save();ui()}
+function ui(){$('cash').textContent=fmt(s.cash);$('day').textContent=s.day;$('pay').textContent=7-(s.day%7||7);
+ $('crew').style.display=s.act&&!s.wait?'block':'none';
+ let h=`<div class="dots">${P.map((_,i)=>`<span class="dot ${i<s.done?'on':i==s.done?'cur':''}"></span>`).join('')}</div>`;
+ h+=guestHtml();
+ if(s.done>=5){h+=`<h2>Homestay open</h2><p class="note">Fully renovated. Quality ${Math.round(s.qs.reduce((a,b)=>a+b,0)/5)}%. Next: hire staff and unlock the 13th month event.</p>`}
+ else if(s.act){const a=s.act;h+=`<h2>Building: ${P[s.done].n}</h2><div class="bar"><i style="width:${100*(1-a.left/a.total)}%"></i></div><p class="note">${a.left} work day(s) left. Wages owed: ₱${fmt(s.owed)}.</p>${s.wait?'<p class="warn">Work paused. Earn ₱'+fmt(s.owed-s.cash)+' more to pay the crew.</p>':''}`}
+ else{const c=cost(s.done,s.mode),tot=c.mat+c.lab+c.meal+c.permit,con=tot*.1,all=tot+con;
+  const seg=[['Materials',c.mat,'#22b573'],['Labor',c.lab,'#ff5a4d'],['Meals',c.meal,'#ffc233'],['Permit',c.permit,'#3cc6d9'],['Contingency',con,'#e8337f']];
+  h+=`<h2>Next: ${P[s.done].n}</h2><div class="chips">${Object.keys(M).map(k=>`<button class="chip ${k==s.mode?'sel':''}" onclick="s.mode='${k}';ui()">${M[k].t}</button>`).join('')}</div>
+  <div class="bar">${seg.map(x=>`<i style="width:${100*x[1]/all}%;background:${x[2]}"></i>`).join('')}</div>
+  <div class="leg">${seg.filter(x=>x[1]).map(x=>`<span style="--c:${x[2]}">${x[0]} ₱${fmt(x[1])}</span>`).join('')}</div>
+  <p class="note">${c.days} work day(s). Budget ₱${fmt(all)}. Materials${c.permit?' and permit':''} are paid now; wages on sweldo day.</p>
+  <button class="go" onclick="start()" ${s.cash<c.mat+c.permit?'disabled':''}>Start phase · pay ₱${fmt(c.mat+c.permit)}</button>`}
+ $('panel').innerHTML=h}
+/* ---------- guests (bots) ---------- */
+const GATE=[-270,210],WAIT=[-120,150],EXIT=[280,210],EM=['🧑‍🎒','👩‍🦱','👨‍🦰','👩‍🦳','🧓','👨‍🦲','👩‍🦰','🧑‍🌾','🧔','👱‍♀️'];
+const door=()=>[0,s.done<2?78:112];
+let G=[],gid=0;
+function spawn(){const w=G.filter(g=>g.st=='q'||g.st=='in').length;
+ G.push({id:++gid,e:EM[Math.random()*EM.length|0],x:GATE[0],y:GATE[1],tx:WAIT[0]+w*46,ty:WAIT[1],st:'in',n:1+(Math.random()*3|0),pat:4,step:0})}
+function popup(x,y,t){G.push({id:++gid,st:'pop',txt:t,x,y,tx:x,ty:y,life:1.6})}
+function daily(){
+ const waiting=G.filter(g=>g.st=='q'||g.st=='in').length;
+ if(waiting<3&&Math.random()<.2+.1*s.rep)spawn();
+ G.forEach(g=>{if(g.st=='q'){g.pat--;if(g.pat<=0){g.st='out';g.tx=EXIT[0];g.ty=EXIT[1];rate_(1);popup(g.x,g.y,'😠 left')}}});
+ s.stay.forEach(x=>x.left--);
+ const out=s.stay.filter(x=>x.left<=0);s.stay=s.stay.filter(x=>x.left>0);out.forEach(checkout)}
+function rate_(st){s.rep=(s.rep*Math.min(s.rn,40)+st)/(Math.min(s.rn,40)+1);s.rn++}
+function checkout(x){const q=s.qs.length?s.qs.reduce((a,b)=>a+b,0)/s.qs.length:60;
+ const pay=Math.round(x.n*x.rate*(.8+q/500)+(x.mer?200:0));s.cash+=pay;
+ rate_(Math.max(1,Math.min(5,3+(q>=85?1:0)+(x.mer?1:0)-(x.w>2?1:0))));
+ const d=door();G.push({id:++gid,e:x.e,x:d[0],y:d[1],tx:EXIT[0],ty:EXIT[1],st:'out',step:0});popup(d[0],d[1],'+₱'+fmt(pay));sfx()}
+function welcome(g){if(!g||g.st!='q')return;
+ const inb=G.filter(x=>x.st=='to').length;
+ if(s.stay.length+inb>=cap())return toast('No free room. Wait for a checkout, or renovate for more rooms.');
+ const d=door();g.st='to';g.tx=d[0];g.ty=d[1];ui()}
+function mer(i){const x=s.stay[i];if(!x||x.mer||s.cash<80)return;s.cash-=80;x.mer=true;toast('Merienda served! Expect a bigger tip.');save();ui()}
+function guestHtml(){const w=G.some(g=>g.st=='q');
+ return `<div class="gs"><span>⭐ ${s.rep.toFixed(1)}</span><span>Rooms ${s.stay.length}/${cap()} · ₱${fmt(rate())}/night</span></div>`
+ +(w?'<p class="note"><b>Guests are waiting.</b> Tap them in the scene to check them in.</p>':'')
+ +s.stay.map((x,i)=>`<div class="r2"><span>${x.e} ${x.left} night(s) left</span><button class="mini" ${x.mer||s.cash<80?'disabled':''} onclick="mer(${i})">${x.mer?'Served':'Merienda ₱80'}</button></div>`).join('')}
+function gframe(dt){const gl=$('gl');
+ G.forEach(g=>{
+  if(g.st=='pop'){g.life-=dt;if(g.life<=0)g.dead=true}
+  else{const dx=g.tx-g.x,dy=g.ty-g.y,d=Math.hypot(dx,dy);
+   if(d>3){const v=Math.min(d,90*dt);g.x+=dx/d*v;g.y+=dy/d*v;g.step+=dt*10}
+   else if(g.st=='in')g.st='q';
+   else if(g.st=='to'){g.dead=true;s.stay.push({e:g.e,n:g.n,left:g.n,rate:rate(),mer:false,w:4-g.pat});save();toast('Checked in for '+g.n+' night(s)');ui()}
+   else if(g.st=='out')g.dead=true}
+  if(!g.el){g.el=document.createElement('i');g.el.className='g'+(g.st=='pop'?' pop':'');g.el.dataset.id=g.id;
+   g.el.innerHTML=g.st=='pop'?'<b></b>':'<span class="e"></span><u></u>';(g.el.firstChild).textContent=g.st=='pop'?g.txt:g.e;gl.appendChild(g.el)}
+  const up=g.st=='pop'?-40-(1.6-g.life)*45:-22-Math.abs(Math.sin(g.step))*5;
+  g.el.style.transform=`translate3d(${g.x}px,${g.y}px,0) rotateZ(${-r}deg) rotateX(-58deg) translateY(${up}px)`;
+  g.el.dataset.st=g.st;if(g.st=='q')g.el.lastChild.style.width=Math.max(0,g.pat/4*32)+'px'});
+ G=G.filter(g=>{if(g.dead){g.el&&g.el.remove();return false}return true})}
+$('gl').addEventListener('pointerdown',e=>{const el=e.target.closest('.g');if(!el)return;e.stopPropagation();welcome(G.find(g=>g.id==el.dataset.id))});
+/* ---------- rotate ---------- */
+let r=-35,drag=false,lx=0;const st=$('stage'),w=$('world');
+const setR=()=>w.style.transform=`rotateX(58deg) rotateZ(${r}deg) scale(${Math.min(1,st.clientWidth/520)*1.0})`;
+st.addEventListener('pointerdown',e=>{drag=true;lx=e.clientX;st.setPointerCapture(e.pointerId)});
+st.addEventListener('pointermove',e=>{if(drag){r+=(e.clientX-lx)*.5;lx=e.clientX;setR()}});
+['pointerup','pointercancel'].forEach(t=>st.addEventListener(t,()=>drag=false));
+const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+let lt=performance.now();(function loop(t){const dt=Math.min(.1,(t-lt)/1000);lt=t;if(!drag&&!calm){r+=.12;setR()}gframe(dt);requestAnimationFrame(loop)})(lt);
+/* ---------- sound: bayan ambience (all synthesized, no files) ---------- */
+let AC,master,snd=true;try{snd=localStorage.getItem('harong-snd')!=='off'}catch(e){}
+const SC=[146.83,196,220,246.94,293.66,329.63,392,440,493.88,587.33];
+function note(f,v=.08,len=1.8){const t=AC.currentTime,g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0005,t+len);g.connect(master);
+ [['triangle',f,1],['sine',f*2,.3]].forEach(([ty,fr,m])=>{const o=AC.createOscillator(),q=AC.createGain();o.type=ty;o.frequency.value=fr;q.gain.value=m;o.connect(q);q.connect(g);o.start(t);o.stop(t+len+.1)})}
+function chirp(t,f){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*(1.15+Math.random()*.4),t+.07);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+.1);o.connect(g);g.connect(master);o.start(t);o.stop(t+.12)}
+function bird(){const f=2800+Math.random()*1800,k=2+Math.floor(Math.random()*4);for(let i=0;i<k;i++)chirp(AC.currentTime+i*.12,f*(1+(i%2)*.12));setTimeout(bird,2500+Math.random()*5500)}
+let mi=4;function mel(){mi=Math.max(0,Math.min(SC.length-1,mi+[-2,-1,-1,0,1,1,2][Math.random()*7|0]));note(SC[mi]);if(Math.random()<.25)setTimeout(()=>note(SC[mi]*1.5,.04,1.2),350);setTimeout(mel,600+Math.random()*1000)}
+function sfx(){if(!AC||!snd)return;note(659.25,.06,.5);setTimeout(()=>note(880,.05,.6),110)}
+function initAudio(){if(AC){AC.resume();return}
+ AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=snd?.9:0;master.connect(AC.destination);
+ const b=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+ const n=AC.createBufferSource();n.buffer=b;n.loop=true;const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2400;bp.Q.value=.5;
+ const g=AC.createGain();g.gain.value=.05;const l=AC.createOscillator(),lg=AC.createGain();l.frequency.value=.17;lg.gain.value=.04;l.connect(lg);lg.connect(g.gain);
+ n.connect(bp);bp.connect(g);g.connect(master);n.start();l.start();
+ const dr=AC.createOscillator(),dg=AC.createGain();dr.frequency.value=73.4;dg.gain.value=.025;dr.connect(dg);dg.connect(master);dr.start();
+ setTimeout(bird,1200);setTimeout(mel,600)}
+function snb(){$('snd').textContent=snd?'🔊':'🔇';if(master)master.gain.value=snd?.9:0}
+$('snd').onclick=e=>{e.stopPropagation();snd=!snd;try{localStorage.setItem('harong-snd',snd?'on':'off')}catch(_){}initAudio();snb()};
+document.addEventListener('pointerdown',()=>initAudio(),{once:true});snb();
+document.addEventListener('visibilitychange',()=>{if(AC)document.hidden?AC.suspend():AC.resume()});
+/* ---------- start ---------- */
+const away=Math.min(48,Math.floor((Date.now()-s.ts)/TICK));
+if(away>2){const g=away*income();s.cash+=g;s.day+=away;toast('Welcome back! Guests paid ₱'+fmt(g)+' while you were away')}
+build();setR();ui();setInterval(tick,TICK);
+/* PWA: service worker + install button + hooks for cloud save */
+window.Harong={bootTs,get:()=>s,visit:(n,nm)=>{visiting=true;build(n);$('vtxt').textContent='Visiting '+nm+'’s harong';$('vbar').style.display='flex';$('gl').style.display='none'},set:x=>{s=norm(x);build();ui();try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}};
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+let dip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('inst').hidden=false});
+$('inst').onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$('inst').hidden=true};
+$('vbar').addEventListener('pointerdown',e=>e.stopPropagation());
+$('vback').onclick=()=>{visiting=false;build();$('vbar').style.display='none';$('gl').style.display=''};
+addEventListener('appinstalled',()=>{$('inst').hidden=true;toast('Harong installed')});
+</script><script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,collection,query,orderBy,limit,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyAAIRyAD0koM9EWoA92vn3c1Iu39s_tE9U",
+  authDomain: "harong-246de.firebaseapp.com",
+  projectId: "harong-246de",
+  storageBucket: "harong-246de.firebasestorage.app",
+  messagingSenderId: "46039682273",
+  appId: "1:46039682273:web:824a5f61a6289d26fabba0",
+  measurementId: "G-TZHG76KTFM"
+};
+/* Cloud save: anonymous sign-in, one Firestore document per player at users/{uid}. Local save always works offline. */
+try{
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+let uid=null,timer=null,synced=false;
+const H=window.Harong,$=id=>document.getElementById(id),fmt=n=>Math.round(n).toLocaleString('en-PH');
+let name='';try{name=localStorage.getItem('harong-name')||''}catch(e){}
+const score=st=>Math.round(st.cash+st.done*6000),rating=st=>st.qs&&st.qs.length?Math.round((st.rep??3)*20):60;
+async function pushProfile(){if(!uid||!name)return;const st=H.get();await setDoc(doc(db,'profiles',uid),{name,score:score(st),done:st.done,rating:rating(st),day:st.day,updated:Date.now()})}
+async function push(){timer=null;if(!uid||!navigator.onLine)return;try{const st=H.get();await setDoc(doc(db,'users',uid),{state:JSON.stringify(st),ts:st.ts,updated:Date.now()});await pushProfile()}catch(e){}}
+window.cloudSave=()=>{if(uid&&!timer)timer=setTimeout(push,60000)};
+addEventListener('pagehide',()=>{if(timer){clearTimeout(timer);push()}});
+addEventListener('online',push);
+onAuthStateChanged(auth,async u=>{
+ if(!u){signInAnonymously(auth).catch(()=>{});return}
+ uid=u.uid;
+ try{const snap=await getDoc(doc(db,'users',uid));
+  if(snap.exists()){const c=snap.data();if(c.state&&c.ts>window.Harong.bootTs){window.Harong.set(JSON.parse(c.state))}}
+  if(!name){const p=await getDoc(doc(db,'profiles',uid));if(p.exists()){name=p.data().name;try{localStorage.setItem('harong-name',name)}catch(e){}}}
+  synced=true;push()}catch(e){}
+});
+
+async function openLB(){
+ $('lbm').classList.add('open');$('nmin').value=name;const L=$('lbl');L.textContent='Loading…';
+ try{const snap=await getDocs(query(collection(db,'profiles'),orderBy('score','desc'),limit(20)));L.textContent='';let i=0;
+  if(snap.empty)L.textContent='No players yet. Save a name to be the first.';
+  snap.forEach(d=>{const p=d.data();i++;const r=document.createElement('div');r.className='row'+(d.id===uid?' me':'');
+   const rk=document.createElement('span');rk.className='rk';rk.textContent=i;
+   const nm=document.createElement('span');nm.className='nm';nm.textContent=p.name;
+   const sm=document.createElement('small');sm.textContent='₱'+fmt(p.score)+' · '+p.done+'/5 built'+' · '+(p.rating/20).toFixed(1)+'★';nm.appendChild(sm);
+   r.append(rk,nm);
+   if(d.id!==uid){const b=document.createElement('button');b.className='mini';b.textContent='Visit';b.onclick=()=>{$('lbm').classList.remove('open');H.visit(p.done,p.name)};r.appendChild(b)}
+   L.appendChild(r)})}
+ catch(e){L.textContent=navigator.onLine?'Could not load the leaderboard. Check the Firestore rules.':'The leaderboard needs an internet connection.'}}
+$('lb').onclick=openLB;$('lbx').onclick=()=>$('lbm').classList.remove('open');
+$('nmsv').onclick=async()=>{const v=$('nmin').value.replace(/[^\p{L}\p{N} ._-]/gu,'').trim();
+ if(v.length<2){$('nmin').focus();return}
+ name=v;try{localStorage.setItem('harong-name',name)}catch(e){}
+ try{await pushProfile()}catch(e){}openLB()};
+}catch(e){console.warn('Cloud save unavailable',e)}
+</script>
+</body></html>
