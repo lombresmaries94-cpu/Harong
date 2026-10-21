@@ -1,5 +1,5 @@
 // Harong service worker: app shell works offline. Bump VERSION on every deploy.
-const VERSION = 'harong-v3';
+const VERSION = 'harong-v4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 const EXTRA_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'www.gstatic.com'];
 

@@ -70,7 +70,12 @@ header{flex-wrap:wrap}
 @keyframes bub{from{transform:translate(-50%,0)}to{transform:translate(-50%,-6px)}}
 .g[data-st=pop],.g[data-st=out]{pointer-events:none}
 .g.pop b{font:800 18px 'Baloo 2',sans-serif;color:#fff;text-shadow:0 2px 0 #1a6b3f,0 0 6px #000;white-space:nowrap}
-.gs{display:flex;justify-content:space-between;font-weight:700;margin:2px 0 4px}
+.g.av{font-size:40px}
+.g[data-st=av]{pointer-events:none}
+.g[data-st=rq]{cursor:default}.g[data-st=rq] u{display:block}
+.g[data-a="1"]{cursor:pointer;background:rgba(255,194,51,.85);border-radius:50%;box-shadow:0 0 14px 6px rgba(255,194,51,.8)}
+.g[data-a="1"]::after{content:'Serve!';position:absolute;left:50%;top:-30px;background:var(--mag);color:#fff;font:700 12px/1.2 'Baloo 2',sans-serif;padding:1px 8px;border-radius:10px;white-space:nowrap;animation:bub .7s ease-in-out infinite alternate}
+.gs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:space-between;font-weight:700;margin:2px 0 4px}
 .r2{display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:3px 10px;margin:4px 0;font-weight:600}
 .r2 span{flex:1}.mini:disabled{background:#b9a98a;cursor:not-allowed}
 @media(prefers-reduced-motion:reduce){.g[data-st=q]::after{animation:none;transform:translateX(-50%)}}
@@ -89,16 +94,17 @@ let s={cash:28000,day:1,done:0,act:null,owed:0,mode:'kap',qs:[],wait:false,ts:Da
 let visiting=false;let fresh=true;
 try{const x=JSON.parse(localStorage.getItem(KEY));if(x){s=x;fresh=false}}catch(e){}
 const bootTs=fresh?0:s.ts;
-const norm=x=>{x.stay=x.stay||[];x.rep=x.rep??3;x.rn=x.rn||0;return x};norm(s);
+const norm=x=>{x.stay=(x.stay||[]).filter(z=>z.t!=null&&z.reqs);x.rep=x.rep??3;x.rn=x.rn||0;return x};norm(s);
 const $=id=>document.getElementById(id);
 function cost(i,mode){const p=P[i],m=M[mode];let l=0,wd=0,dd=0;p.c.forEach(([t,d])=>{l+=T[t]*d;wd+=d;dd=Math.max(dd,d)});
  return{mat:p.m,lab:Math.round(l*m.l),meal:mode=='diy'?0:wd*100,days:Math.max(1,Math.ceil(dd*m.d)),permit:i==0?500:0}}
 const cap=()=>1+(s.done>=3)+(s.done>=5),rate=()=>350+s.done*150;
-function income(){return Math.round(cap()*rate()*.3)} // offline estimate only
+function income(){return Math.round(cap()*rate()*4/12*.4)} // offline estimate only
 function save(){s.ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}if(window.cloudSave)window.cloudSave()}
 function toast(t){try{sfx()}catch(_){}const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',3200)}
 /* ---------- 3D helpers ---------- */
 const F=(w,h,tr,bg,ex='')=>`<i class="f" style="width:${w}px;height:${h}px;margin:${-h/2}px 0 0 ${-w/2}px;transform:${tr};background:${bg};${ex}"></i>`;
+const D=(w,h,tr,bg)=>F(w,h,tr,bg,'transition:transform .35s;transform-origin:0 50%;').replace('<i class="f"','<i class="f" id="dl" data-b="'+tr+'"');
 function box(w,d,h,x,y,z,c){const p=`translate3d(${x}px,${y}px,${z}px) `;
  return F(w,h,p+`translateY(${d/2}px) translateZ(${h/2}px) rotateX(-90deg)`,c.f)+F(w,h,p+`translateY(${-d/2}px) translateZ(${h/2}px) rotateX(-90deg)`,c.s)
  +F(d,h,p+`translateX(${w/2}px) translateZ(${h/2}px) rotateZ(90deg) rotateX(-90deg)`,c.s)+F(d,h,p+`translateX(${-w/2}px) translateZ(${h/2}px) rotateZ(90deg) rotateX(-90deg)`,c.s)
@@ -117,15 +123,16 @@ function build(n=s.done){let h=F(560,440,'translateZ(0)','radial-gradient(#4fe08
   [[-50,-40],[50,-40],[-50,40],[50,40]].forEach(([x,y])=>h+=box(10,10,46,x,y,0,{f:'#caa45c',s:'#a8823e',t:'#e0bd78'}));
   h+=box(140,120,56,0,0,46,{f:plank('#e9c978','#c9a24c'),s:plank('#d8b560','#b38c3a'),t:'#f0d58c'});
   h+=roof(140,120,102,54,16,'repeating-linear-gradient(#5fd15a 0 8px,#3da63a 8px 10px)','repeating-linear-gradient(#49bf48 0 8px,#2f9a30 8px 10px)','#d8b560');
-  h+=F(26,40,'translate3d(0,61px,70px) rotateX(-90deg)','#8a5a2b');
+  h+=F(28,44,'translate3d(0,61.2px,68px) rotateX(-90deg)','#25130a')+D(28,44,'translate3d(0,61.6px,68px) rotateX(-90deg)','#8a5a2b');
  }else{
   const wc=n>=5?{f:'#ffb23c',s:'#ee8f1a',t:'#ffd27a'}:{f:plank('#c58a54','#a46b3a'),s:plank('#b07744','#8f5b2e'),t:'#d9a066'};
   h+=box(220,170,24,0,0,4,{f:'#9aa0a6',s:'#7d838a',t:'#b4bac0'});
   h+=box(220,170,120,0,0,28,wc);
+  h+=F(44,76,'translate3d(0,85.2px,66px) rotateX(-90deg)','#25130a')+D(44,76,'translate3d(0,85.6px,66px) rotateX(-90deg)',n>=5?'#e8337f':'#6b4423');
   if(n>=3)h+=roof(220,170,148,70,16,'repeating-linear-gradient(#ff5a4d 0 12px,#d63a31 12px 14px)','repeating-linear-gradient(#e84a40 0 12px,#bd2f27 12px 14px)',wc.s);
   if(n>=4){const y=86.5,z=96,sh=n>=5?'#e8337f':'#6b4423';
    [-70,70].forEach(x=>h+=F(40,40,`translate3d(${x}px,${y}px,${z}px) rotateX(-90deg)`,'linear-gradient(135deg,#bff3ff,#3cc6d9)',`border:5px solid ${sh}`));
-   h+=F(40,70,`translate3d(0,${y}px,63px) rotateX(-90deg)`,n>=5?'#e8337f':'#6b4423','border-radius:20px 20px 0 0');
+   
    [-1,1].forEach(k=>h+=F(40,40,`translate3d(${k*110.6}px,0,${z}px) rotateZ(90deg) rotateX(-90deg)`,'linear-gradient(135deg,#bff3ff,#3cc6d9)',`border:5px solid ${sh}`))}
  }
  h+=palm(210,-130)+palm(-215,120);
@@ -153,48 +160,93 @@ function ui(){$('cash').textContent=fmt(s.cash);$('day').textContent=s.day;$('pa
   <p class="note">${c.days} work day(s). Budget ₱${fmt(all)}. Materials${c.permit?' and permit':''} are paid now; wages on sweldo day.</p>
   <button class="go" onclick="start()" ${s.cash<c.mat+c.permit?'disabled':''}>Start phase · pay ₱${fmt(c.mat+c.permit)}</button>`}
  $('panel').innerHTML=h}
-/* ---------- guests (bots) ---------- */
-const GATE=[-270,210],WAIT=[-120,150],EXIT=[280,210],EM=['🧑‍🎒','👩‍🦱','👨‍🦰','👩‍🦳','🧓','👨‍🦲','👩‍🦰','🧑‍🌾','🧔','👱‍♀️'];
+/* ---------- guests, avatar, requests ---------- */
+const GATE=[-270,210],WAIT=[-120,150],EXIT=[280,210],HOME=[90,175],STAY=30;
+const EM=['🧑‍🎒','👩‍🦱','👨‍🦰','👩‍🦳','🧓','👨‍🦲','👩‍🦰','🧑‍🌾','🧔','👱‍♀️'],AVS=['🧑‍🍳','👩‍🍳','👨‍🍳','🧑‍🌾','👷','🧑‍✈️'];
+const RQK=[{k:'food',em:'🍲',t:'Food',c:60,b:180},{k:'drink',em:'🥤',t:'Drink',c:30,b:110},{k:'bed',em:'🛏️',t:'Extra bedding',c:40,b:150},{k:'towel',em:'🧺',t:'Towels',c:20,b:90},{k:'fan',em:'🪭',t:'Electric fan',c:15,b:80}];
+const RK=Object.fromEntries(RQK.map(r=>[r.k,r])),CL=new Set(),RE=new Map();
 const door=()=>[0,s.done<2?78:112];
-let G=[],gid=0;
-function spawn(){const w=G.filter(g=>g.st=='q'||g.st=='in').length;
- G.push({id:++gid,e:EM[Math.random()*EM.length|0],x:GATE[0],y:GATE[1],tx:WAIT[0]+w*46,ty:WAIT[1],st:'in',n:1+(Math.random()*3|0),pat:4,step:0})}
+let G=[],gid=0,sid=Date.now(),dirty=false;
+const AV={x:HOME[0],y:HOME[1],e:AVS[0],q:[],cur:null,step:0,el:null};
+try{const a=localStorage.getItem('harong-av');if(a&&AVS.includes(a))AV.e=a}catch(e){}
+function cycAv(){AV.e=AVS[(AVS.indexOf(AV.e)+1)%AVS.length];try{localStorage.setItem('harong-av',AV.e)}catch(e){}if(AV.el)AV.el.firstChild.textContent=AV.e;ui()}
+function avGo(x,y,fn,wait){AV.q.push({x,y,fn,wait:wait||0})}
+function setDoor(o){const el=$('dl');if(el)el.style.transform=el.dataset.b+(o?' scaleX(.12)':'')}
+const bill=(x,y,up)=>`translate3d(${x}px,${y}px,0) rotateZ(${-r}deg) rotateX(-58deg) translateY(${up}px)`;
+function spawn(){let i=0;while(G.some(g=>(g.st=='q'||g.st=='in')&&Math.abs(g.tx-(WAIT[0]+i*46))<2))i++;
+ G.push({id:++gid,e:EM[Math.random()*EM.length|0],x:GATE[0],y:GATE[1],tx:WAIT[0]+i*46,ty:WAIT[1],st:'in',pat:40,step:0})}
 function popup(x,y,t){G.push({id:++gid,st:'pop',txt:t,x,y,tx:x,ty:y,life:1.6})}
-function daily(){
- const waiting=G.filter(g=>g.st=='q'||g.st=='in').length;
- if(waiting<3&&Math.random()<.2+.1*s.rep)spawn();
- G.forEach(g=>{if(g.st=='q'){g.pat--;if(g.pat<=0){g.st='out';g.tx=EXIT[0];g.ty=EXIT[1];rate_(1);popup(g.x,g.y,'😠 left')}}});
- s.stay.forEach(x=>x.left--);
- const out=s.stay.filter(x=>x.left<=0);s.stay=s.stay.filter(x=>x.left>0);out.forEach(checkout)}
-function rate_(st){s.rep=(s.rep*Math.min(s.rn,40)+st)/(Math.min(s.rn,40)+1);s.rn++}
+function daily(){const w=G.filter(g=>g.st=='q'||g.st=='in'||g.st=='follow').length;
+ if(w<cap()+1&&s.stay.length+w<cap()+2&&Math.random()<.14+.04*s.rep)spawn()}
+function rate_(st){const n=Math.min(s.rn,40);s.rep=(s.rep*n+st)/(n+1);s.rn++}
+function welcome(g){if(!g||g.st!='q'||g.claim)return;
+ if(s.stay.length+G.filter(x=>x.claim).length>=cap())return toast('No free room. Wait for a checkout, or renovate for more rooms.');
+ g.claim=true;const dy=door()[1];
+ avGo(g.x+30,g.y,()=>{g.st='follow'},.25);
+ avGo(0,dy+34,()=>{setDoor(true);g.st='to';g.tx=0;g.ty=dy+4},1.1);
+ avGo(0,dy+34,()=>setDoor(false),.1)}
+function checkin(g){g.dead=true;const ks=[...RQK].sort(()=>Math.random()-.5);
+ s.stay.push({id:++sid,e:g.e,t:STAY,rate:rate(),reqs:[{k:ks[0].k,at:3+Math.random()*4,st:'wait'},{k:ks[1].k,at:14+Math.random()*7,st:'wait'}]});
+ toast('Welcome! Watch for their requests.');save();dirty=true}
+function serveStay(id){const x=s.stay.find(z=>z.id==id);if(!x)return;
+ const r=x.reqs.find(q=>q.st=='act'&&!CL.has(q));if(!r)return;const K=RK[r.k];
+ if(s.cash<K.c)return toast('Need ₱'+K.c+' for '+K.t);
+ CL.add(r);const dy=door()[1];
+ avGo(0,dy+34,()=>{CL.delete(r);if(r.st!='act')return;if(s.cash<K.c)return toast('Not enough cash');
+  s.cash-=K.c;r.st='done';popup(0,dy+30,'✔ '+K.em);sfx();save();ui()},.35)}
 function checkout(x){const q=s.qs.length?s.qs.reduce((a,b)=>a+b,0)/s.qs.length:60;
- const pay=Math.round(x.n*x.rate*(.8+q/500)+(x.mer?200:0));s.cash+=pay;
- rate_(Math.max(1,Math.min(5,3+(q>=85?1:0)+(x.mer?1:0)-(x.w>2?1:0))));
- const d=door();G.push({id:++gid,e:x.e,x:d[0],y:d[1],tx:EXIT[0],ty:EXIT[1],st:'out',step:0});popup(d[0],d[1],'+₱'+fmt(pay));sfx()}
-function welcome(g){if(!g||g.st!='q')return;
- const inb=G.filter(x=>x.st=='to').length;
- if(s.stay.length+inb>=cap())return toast('No free room. Wait for a checkout, or renovate for more rooms.');
- const d=door();g.st='to';g.tx=d[0];g.ty=d[1];ui()}
-function mer(i){const x=s.stay[i];if(!x||x.mer||s.cash<80)return;s.cash-=80;x.mer=true;toast('Merienda served! Expect a bigger tip.');save();ui()}
+ const base=Math.round(x.rate*4*(.8+q/500));let bonus=0,sv=0,ms=0;
+ x.reqs.forEach(r=>{if(r.st=='done'){bonus+=RK[r.k].b;sv++}else ms++});
+ s.cash+=base+bonus;rate_(Math.max(1,Math.min(5,3+(q>=85?1:0)+sv-ms)));
+ const d=door();setDoor(true);setTimeout(()=>setDoor(false),900);
+ G.push({id:++gid,e:x.e,x:d[0],y:d[1]+4,tx:EXIT[0],ty:EXIT[1],st:'out',step:0});
+ popup(d[0]-20,d[1]+10,'+₱'+fmt(base));if(bonus)popup(d[0]+30,d[1]+10,'Bonus +₱'+fmt(bonus));
+ sfx();save()}
 function guestHtml(){const w=G.some(g=>g.st=='q');
- return `<div class="gs"><span>⭐ ${s.rep.toFixed(1)}</span><span>Rooms ${s.stay.length}/${cap()} · ₱${fmt(rate())}/night</span></div>`
- +(w?'<p class="note"><b>Guests are waiting.</b> Tap them in the scene to check them in.</p>':'')
- +s.stay.map((x,i)=>`<div class="r2"><span>${x.e} ${x.left} night(s) left</span><button class="mini" ${x.mer||s.cash<80?'disabled':''} onclick="mer(${i})">${x.mer?'Served':'Merienda ₱80'}</button></div>`).join('')}
+ let h=`<div class="gs"><span>⭐ ${s.rep.toFixed(1)}</span><span>Rooms ${s.stay.length}/${cap()} · ₱${fmt(rate()*4)}/stay</span><button class="mini" onclick="cycAv()">${AV.e} Avatar</button></div>`;
+ if(w)h+='<p class="note"><b>Guest waiting.</b> Tap them. Your avatar opens the door and shows them in.</p>';
+ s.stay.forEach(x=>{const r=x.reqs.find(q=>q.st=='act'),K=r&&RK[r.k];
+  h+=`<div class="r2"><span>${x.e} ${K?'asks for '+K.em+' '+K.t+' · +₱'+K.b+' bonus':'relaxing…'}</span>${K?`<button class="mini" ${s.cash<K.c?'disabled':''} onclick="serveStay('${x.id}')">Serve ₱${K.c}</button>`:''}</div>`});
+ return h}
 function gframe(dt){const gl=$('gl');
+ s.stay.forEach(x=>{x.t-=dt;const e=STAY-x.t;x.reqs.forEach(r=>{if(r.st=='wait'&&e>=r.at){r.st='act';dirty=true;sfx()}})});
+ const fin=s.stay.filter(x=>x.t<=0);if(fin.length){s.stay=s.stay.filter(x=>x.t>0);fin.forEach(checkout);dirty=true}
+ if(AV.cur&&AV.cur.home&&AV.q.length)AV.cur=null;
+ if(!AV.cur&&AV.q.length)AV.cur=AV.q.shift();
+ if(!AV.cur&&Math.hypot(HOME[0]-AV.x,HOME[1]-AV.y)>4)AV.cur={x:HOME[0],y:HOME[1],home:true,wait:0};
+ if(AV.cur){const c=AV.cur,dx=c.x-AV.x,dy=c.y-AV.y,d=Math.hypot(dx,dy);
+  if(d>3){const v=Math.min(d,130*dt);AV.x+=dx/d*v;AV.y+=dy/d*v;AV.step+=dt*12}
+  else{if(!c.did){c.did=true;c.fn&&c.fn()}c.wait-=dt;if(c.wait<=0)AV.cur=null}}
+ if(!AV.el){AV.el=document.createElement('i');AV.el.className='g av';AV.el.dataset.st='av';AV.el.innerHTML='<span class="e"></span>';AV.el.firstChild.textContent=AV.e;gl.appendChild(AV.el)}
+ AV.el.style.transform=bill(AV.x,AV.y,-24-Math.abs(Math.sin(AV.step))*6);
  G.forEach(g=>{
   if(g.st=='pop'){g.life-=dt;if(g.life<=0)g.dead=true}
-  else{const dx=g.tx-g.x,dy=g.ty-g.y,d=Math.hypot(dx,dy);
-   if(d>3){const v=Math.min(d,90*dt);g.x+=dx/d*v;g.y+=dy/d*v;g.step+=dt*10}
+  else{
+   if(g.st=='follow'){g.tx=AV.x-30;g.ty=AV.y+10}
+   if(g.st=='q'&&!g.claim){g.pat-=dt;if(g.pat<=0){g.st='out';g.tx=EXIT[0];g.ty=EXIT[1];rate_(2);popup(g.x,g.y,'😠 left');dirty=true}}
+   const dx=g.tx-g.x,dy=g.ty-g.y,d=Math.hypot(dx,dy);
+   if(d>3){const v=Math.min(d,(g.st=='follow'?150:90)*dt);g.x+=dx/d*v;g.y+=dy/d*v;g.step+=dt*10}
    else if(g.st=='in')g.st='q';
-   else if(g.st=='to'){g.dead=true;s.stay.push({e:g.e,n:g.n,left:g.n,rate:rate(),mer:false,w:4-g.pat});save();toast('Checked in for '+g.n+' night(s)');ui()}
+   else if(g.st=='to')checkin(g);
    else if(g.st=='out')g.dead=true}
   if(!g.el){g.el=document.createElement('i');g.el.className='g'+(g.st=='pop'?' pop':'');g.el.dataset.id=g.id;
-   g.el.innerHTML=g.st=='pop'?'<b></b>':'<span class="e"></span><u></u>';(g.el.firstChild).textContent=g.st=='pop'?g.txt:g.e;gl.appendChild(g.el)}
+   g.el.innerHTML=g.st=='pop'?'<b></b>':'<span class="e"></span><u></u>';g.el.firstChild.textContent=g.st=='pop'?g.txt:g.e;gl.appendChild(g.el)}
   const up=g.st=='pop'?-40-(1.6-g.life)*45:-22-Math.abs(Math.sin(g.step))*5;
-  g.el.style.transform=`translate3d(${g.x}px,${g.y}px,0) rotateZ(${-r}deg) rotateX(-58deg) translateY(${up}px)`;
-  g.el.dataset.st=g.st;if(g.st=='q')g.el.lastChild.style.width=Math.max(0,g.pat/4*32)+'px'});
- G=G.filter(g=>{if(g.dead){g.el&&g.el.remove();return false}return true})}
-$('gl').addEventListener('pointerdown',e=>{const el=e.target.closest('.g');if(!el)return;e.stopPropagation();welcome(G.find(g=>g.id==el.dataset.id))});
+  g.el.style.transform=bill(g.x,g.y,up);
+  g.el.dataset.st=g.st;if(g.st=='q')g.el.lastChild.style.width=Math.max(0,g.pat/40*32)+'px'});
+ G=G.filter(g=>{if(g.dead){g.el&&g.el.remove();return false}return true});
+ const live=new Set();
+ s.stay.forEach((x,i)=>{live.add(x.id);let el=RE.get(x.id);
+  if(!el){el=document.createElement('i');el.className='g';el.dataset.stay=x.id;el.innerHTML='<span class="e"></span><u></u>';gl.appendChild(el);RE.set(x.id,el)}
+  const r=x.reqs.find(q=>q.st=='act'),t=r?RK[r.k].em:x.e;
+  if(el._t!==t){el._t=t;el.firstChild.textContent=t}
+  el.dataset.st='rq';el.dataset.a=r?1:0;el.lastChild.style.width=Math.max(0,x.t/STAY*32)+'px';
+  el.style.transform=bill(-60+i*60,door()[1]+66,-28)});
+ RE.forEach((el,id)=>{if(!live.has(id)){el.remove();RE.delete(id)}});
+ if(dirty){dirty=false;ui()}}
+$('gl').addEventListener('pointerdown',e=>{const el=e.target.closest('.g');if(!el)return;e.stopPropagation();
+ if(el.dataset.stay)return serveStay(el.dataset.stay);
+ welcome(G.find(g=>g.id==el.dataset.id))});
 /* ---------- rotate ---------- */
 let r=-35,drag=false,lx=0;const st=$('stage'),w=$('world');
 const setR=()=>w.style.transform=`rotateX(58deg) rotateZ(${r}deg) scale(${Math.min(1,st.clientWidth/520)*1.0})`;
@@ -202,7 +254,7 @@ st.addEventListener('pointerdown',e=>{drag=true;lx=e.clientX;st.setPointerCaptur
 st.addEventListener('pointermove',e=>{if(drag){r+=(e.clientX-lx)*.5;lx=e.clientX;setR()}});
 ['pointerup','pointercancel'].forEach(t=>st.addEventListener(t,()=>drag=false));
 const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;
-let lt=performance.now();(function loop(t){const dt=Math.min(.1,(t-lt)/1000);lt=t;if(!drag&&!calm){r+=.12;setR()}gframe(dt);requestAnimationFrame(loop)})(lt);
+let lt=performance.now();(function loop(t){const dt=Math.min(.1,(t-lt)/1000);lt=t;if(!drag&&!calm&&!G.length&&!s.stay.length){r+=.12;setR()}gframe(dt);requestAnimationFrame(loop)})(lt);
 /* ---------- sound: bayan ambience (all synthesized, no files) ---------- */
 let AC,master,snd=true;try{snd=localStorage.getItem('harong-snd')!=='off'}catch(e){}
 const SC=[146.83,196,220,246.94,293.66,329.63,392,440,493.88,587.33];
@@ -225,8 +277,9 @@ $('snd').onclick=e=>{e.stopPropagation();snd=!snd;try{localStorage.setItem('haro
 document.addEventListener('pointerdown',()=>initAudio(),{once:true});snb();
 document.addEventListener('visibilitychange',()=>{if(AC)document.hidden?AC.suspend():AC.resume()});
 /* ---------- start ---------- */
-const away=Math.min(48,Math.floor((Date.now()-s.ts)/TICK));
+const _aw=(Date.now()-s.ts)/1000,away=Math.min(48,Math.floor((Date.now()-s.ts)/TICK));
 if(away>2){const g=away*income();s.cash+=g;s.day+=away;toast('Welcome back! Guests paid ₱'+fmt(g)+' while you were away')}
+s.stay=s.stay.filter(x=>{x.t-=_aw;if(x.t<=0){checkout(x);return false}return true});
 build();setR();ui();setInterval(tick,TICK);
 /* PWA: service worker + install button + hooks for cloud save */
 window.Harong={bootTs,get:()=>s,visit:(n,nm)=>{visiting=true;build(n);$('vtxt').textContent='Visiting '+nm+'’s harong';$('vbar').style.display='flex';$('gl').style.display='none'},set:x=>{s=norm(x);build();ui();try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}};
