@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0d3b4c">
+<title>Harong – Bicol Homestay Builder</title>
+<meta name="description" content="Harong: build and run a Bicol homestay in 3D.">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Harong"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--sea:#0d3b4c;--coral:#ff5a4d;--sun:#ffc233;--leaf:#22b573;--mag:#e8337f;--cream:#fff4dc;--ink:#2a1d14}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--sea);font-family:'Baloo 2',system-ui,sans-serif;color:var(--ink);touch-action:none;user-select:none;-webkit-user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+#lab{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.t{position:absolute;transform:translate(-50%,-100%);font-weight:800;font-size:15px;color:#fff;text-shadow:0 1px 3px #000;white-space:nowrap;text-align:center;line-height:1.1}
+.t .bb{background:#fff;color:var(--ink);border-radius:14px;padding:0 9px;font-size:22px;text-shadow:none;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.t.pl{pointer-events:auto;cursor:pointer}.plb{background:var(--sun);color:var(--ink);border-radius:10px;padding:3px 12px;font-size:15px;font-weight:800;letter-spacing:.6px;text-shadow:none;box-shadow:0 2px 0 rgba(0,0,0,.35)}.t .bb[data-c]{pointer-events:auto;cursor:pointer;padding:4px 12px;font-size:26px}.warn{color:#b3123d;font-weight:700}
+.t .bar{height:5px;width:34px;margin:2px auto 0;background:rgba(0,0,0,.4);border-radius:3px;overflow:hidden}.t .bar i{display:block;height:100%;background:var(--leaf)}
+#hud{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 6px) 8px 0;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.pill{background:rgba(13,59,76,.85);color:#fff;border-radius:99px;padding:2px 12px;font-weight:700;white-space:nowrap}.pill b{color:var(--sun)}
+#carry{pointer-events:auto;background:var(--mag);border:0;font:inherit;font-weight:700;cursor:pointer}
+#menu{position:fixed;right:8px;top:calc(env(safe-area-inset-top,0px) + 44px);display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.mb{background:var(--cream);border:0;border-radius:14px;padding:3px 12px;font:inherit;font-weight:800;color:var(--ink);box-shadow:0 3px 0 var(--sun);cursor:pointer}
+#inst{background:var(--mag);color:#fff}
+#js{position:fixed;left:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.55)}
+#kn{position:absolute;left:35px;top:35px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.8);pointer-events:none}
+#act{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);min-width:120px;max-width:55vw;padding:14px 18px;display:none;border:0;border-radius:40px;font:inherit;font-size:1.1rem;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--coral),var(--mag));box-shadow:0 5px 0 #9a1f55}
+#vbar{position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);z-index:5;display:none;justify-content:space-between;align-items:center;background:var(--mag);color:#fff;border-radius:14px;padding:6px 12px;font-weight:700}
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 80px);transform:translateX(-50%);background:var(--mag);color:#fff;padding:6px 16px;border-radius:99px;font-weight:700;display:none;z-index:40;max-width:90%;text-align:center}
+#md,#lbm{position:fixed;inset:0;background:rgba(13,59,76,.82);display:none;align-items:flex-end;justify-content:center;z-index:30}#md.open,#lbm.open{display:flex}
+#mc,#lbc{background:var(--cream);width:min(560px,100%);max-height:88%;overflow:auto;border-radius:22px 22px 0 0;padding:14px;box-shadow:0 -6px 0 var(--sun);touch-action:pan-y}
+h2{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px;font-size:1.3rem;font-weight:800}h3{margin:10px 0 4px}
+.note{font-size:.88rem;margin:4px 0}.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chip{border:2px solid var(--sea);background:#fff;border-radius:14px;padding:3px 10px;font:inherit;font-weight:700;color:var(--ink);cursor:pointer}.chip.sel{background:var(--sea);color:#fff}
+.sw{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--sea);cursor:pointer}.sw.sel{box-shadow:0 0 0 4px var(--mag)}
+.rw,.row{display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:5px 10px;margin:5px 0;font-weight:700}.rw>span:first-child,.nm{flex:1}
+.rw small,.row small{display:block;font-weight:600;color:#6b5a44;font-size:.78rem}.pr{color:#128a4f}
+.mini{border:0;border-radius:10px;padding:3px 12px;font:inherit;font-weight:700;background:var(--leaf);color:#fff;cursor:pointer}.mini.red{background:#c2352b}
+.go{width:100%;border:0;border-radius:16px;padding:10px;margin:6px 0;font:inherit;font-size:1.05rem;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--coral),var(--mag));box-shadow:0 4px 0 #9a1f55;cursor:pointer}.go.alt{background:linear-gradient(135deg,#22b573,#0d8a6a);box-shadow:0 4px 0 #0a5f49}
+.go:disabled,.mini:disabled{background:#b9a98a;box-shadow:none;cursor:not-allowed}
+.gs{display:flex;gap:10px;flex-wrap:wrap;font-weight:700;margin:2px 0 6px}.bar2{flex:1;height:12px;background:#eadbb8;border-radius:6px;overflow:hidden}.bar2 i{display:block;height:100%;background:var(--sun)}
+#nmrow{display:flex;gap:6px;margin:6px 0 10px}#nmin{flex:1;min-width:0;border:2px solid var(--sea);border-radius:12px;padding:4px 10px;font:inherit;font-weight:600}.rk{width:28px;color:var(--mag)}
+button:focus-visible,#nmin:focus-visible{outline:3px solid var(--mag);outline-offset:2px}
+</style></head><body>
+<canvas id="c"></canvas><div id="lab"></div>
+<div id="hud"><span class="pill">₱<b id="cash"></b></span><span class="pill" id="clk"></span><span class="pill">⭐<b id="rep"></b></span><button class="pill" id="carry" hidden></button></div>
+<div id="menu"><button class="mb" id="bR">🔨 Renovate</button><button class="mb" id="bS">🛒 Shop</button><button class="mb" id="bI">🎒 Inventory</button><button class="mb" id="bT">👥 Staff</button><button class="mb" id="bD">📊 Dashboard</button><button class="mb" id="lb">🏆 Rank</button><button class="mb" id="snd">🔊</button><button class="mb" id="inst" hidden>Install</button></div>
+<div id="js" aria-label="Joystick"><div id="kn"></div></div><button id="act"></button>
+<div id="vbar"><span id="vtxt"></span><button class="mini" id="vback">Back home</button></div><div id="toast" role="status"></div>
+<div id="md"><div id="mc"></div></div>
+<div id="lbm"><div id="lbc" role="dialog" aria-label="Leaderboard"><h2>Top harongs <button class="mini" id="lbx">Close</button></h2><div id="nmrow"><input id="nmin" maxlength="16" placeholder="Your name (2 to 16 letters)" aria-label="Your name"><button class="mini" id="nmsv">Save name</button></div><div id="lbl"></div></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+
+const T=THREE,$=id=>document.getElementById(id),fmt=n=>Math.round(n).toLocaleString('en-PH'),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a);
+/* ---------- data ---------- */
+const KEY='harong-v2',STAY=30;
+const RQK={meal:{em:'🍲',n:'Meal',f:180},drink:{em:'🥤',n:'Drink',f:60},linen:{em:'🛏️',n:'Extra bedding',f:150},towel:{em:'🧺',n:'Towels',f:80}},RKS=Object.keys(RQK);
+const MT={cement:{n:'Cement (40kg bag)',e:'🧱',p:260},sand:{n:'Sand (cu.m)',e:'⛱️',p:1100},lumber:{n:'Lumber 2x3x10',e:'🪵',p:320},plywood:{n:'Plywood sheet',e:'🟫',p:750},screws:{n:'Nails and screws pack',e:'🔩',p:180},gi:{n:'GI roofing sheet',e:'🏠',p:420},window:{n:'Window set',e:'🪟',p:2400},door:{n:'Door set',e:'🚪',p:3200},paint:{n:'Paint 4L',e:'🎨',p:900}};
+const PH=[{n:'Footings and slab',m:{cement:4,sand:1},c:[['mason',1],['helper',1]]},{n:'Frame and walls',m:{lumber:10,plywood:4,screws:1},c:[['carpenter',2],['helper',2]]},{n:'Roofing',m:{gi:8,lumber:4,screws:1},c:[['carpenter',1],['helper',1]]},{n:'Windows and doors',m:{window:1,door:1},c:[['carpenter',1]]},{n:'Paint and finish',m:{paint:2},c:[['painter',1]]}];
+const TR={mason:750,carpenter:750,painter:650,helper:500},CR={diy:{t:'DIY',l:0,d:3},kap:{t:'Kapitbahay crew',l:.85,d:1},con:{t:'Licensed contractor',l:1.3,d:.7}};
+const SH=[
+{c:'Food & Supplies',id:'meal',n:'Meal pack (rice + ulam)',e:'🍲',p:70,t:'inv',d:'Sells at ₱180'},{c:'Food & Supplies',id:'drink',n:'Drink (water or softdrink)',e:'🥤',p:30,t:'inv',d:'Sells at ₱60'},
+{c:'Food & Supplies',id:'linen',n:'Linen set',e:'🛏️',p:350,t:'inv',d:'Extra bedding, ₱150 fee'},{c:'Food & Supplies',id:'towel',n:'Towel',e:'🧺',p:120,t:'inv',d:'₱80 fee'},
+{c:'Food & Supplies',id:'kit',n:'Service kit',e:'🛠️',p:150,t:'inv',d:'Scheduled maintenance'},{c:'Food & Supplies',id:'part',n:'Repair parts',e:'🔧',p:450,t:'inv',d:'Fixes a breakdown'},
+...Object.keys(MT).map(k=>({c:'Materials',id:k,n:MT[k].n,e:MT[k].e,p:MT[k].p,t:'mat',d:'For renovation'})),
+{c:'Appliances',id:'ac',n:'Air conditioner (each room)',e:'❄️',p:18500,t:'own',d:'+₱400 per night'},{c:'Appliances',id:'heater',n:'Water heater',e:'🚿',p:4500,t:'own',d:'+₱100 per night'},
+{c:'Appliances',id:'wifi',n:'WiFi router',e:'📶',p:2500,t:'own',d:'+₱150 per night, more guests'},{c:'Appliances',id:'cctv',n:'CCTV set',e:'📹',p:6000,t:'own',d:'Stops break-ins'},
+{c:'Furniture',id:'sofa',n:'Sofa',e:'🛋️',p:6500,t:'own',d:'+₱100 per night'},{c:'Furniture',id:'tv',n:'Smart TV',e:'📺',p:9000,t:'own',d:'+₱150 per night'},
+{c:'Furniture',id:'mattress',n:'Orthopedic mattresses',e:'🛏️',p:7000,t:'own',d:'+₱200 per night'},{c:'Furniture',id:'plants',n:'Plants and pots',e:'🪴',p:800,t:'own',d:'+₱50 per night'},{c:'Furniture',id:'rug',n:'Woven rug',e:'🟥',p:1500,t:'own',d:'+₱50 per night'},
+{c:'Services',id:'elec',n:'Electrician call',e:'⚡',p:850,t:'svc',d:'Fixes the lights'},{c:'Services',id:'tech',n:'Appliance technician',e:'🧰',p:1200,t:'svc',d:'Fixes fridge and fans'},
+{c:'Services',id:'crew',n:'Maintenance crew (full service)',e:'👷',p:2000,t:'svc',d:'Repairs and services everything'},{c:'Services',id:'deliv',n:'Grocery delivery',e:'🛵',p:500,t:'svc',d:'+5 meals and +5 drinks'}];
+const BON={ac:400,heater:100,wifi:150,sofa:100,tv:150,mattress:200,plants:50,rug:50},BASE=[800,1000,1200,1500,1800,2200];
+const ROLES=[{r:'cook',n:'Cook',e:'👨‍🍳',w:620,d:'Fetches and serves meals and drinks'},{r:'housekeeper',n:'Housekeeper',e:'🧹',w:520,d:'Delivers bedding and towels'},{r:'receptionist',n:'Receptionist',e:'🛎️',w:570,d:'Welcomes waiting guests'},{r:'maintenance',n:'Maintenance',e:'🔧',w:650,d:'Repairs and services (uses parts and kits)'},{r:'gardener',n:'Gardener',e:'🌴',w:480,d:'Nicer yard, +5% guests'},{r:'guard',n:'Guard',e:'💂',w:700,d:'Stops night break-ins'},{r:'driver',n:'Driver',e:'🚐',w:750,d:'Airport pickups, +15% guests'}];
+const HOMES={cook:[-4.2,.6],housekeeper:[-1.6,-1.6],receptionist:[1,-1.2],maintenance:[-3.2,2.6],gardener:[-5,8],guard:[8,8],driver:[-9,9]},COLS={cook:0xffffff,housekeeper:0x9b6bd8,receptionist:0xe8337f,maintenance:0xf08a1c,gardener:0x2fa84f,guard:0x2b4f9e,driver:0x3cc6d9};
+const REV={5:['Super linis at mabait ang host! 🌴','Feels like home. We will be back!','Fast service, delicious food.'],4:['Maayos ang stay, thank you.','Good value, friendly staff.'],3:['Okay lang, may kulang sa serbisyo.','Decent stay, slow at times.'],2:['Matagal ang serbisyo.','Hindi namin nakuha ang request namin.'],1:['Walang serbisyo, nagutom kami.','Ignored our requests. Not coming back.']},NM=['Maria','Jun','Aiza','Ben','Liza','Carlo','Joy','Mark','Nena','Rico'];
+const D0=()=>({cash:30000,day:1,done:0,rep:3,rn:0,earn:0,revs:[],inv:{meal:4,drink:6,linen:3,towel:3,kit:2,part:1},mat:{},items:[],staff:[],wear:{},bad:{},due:{},proj:null,hand:{},theme:0,crew:'kap',ts:Date.now()});
+let s=D0(),fresh=true;try{const x=JSON.parse(localStorage.getItem(KEY));if(x){s=Object.assign(D0(),x);fresh=false}}catch(e){}
+const bootTs=fresh?0:s.ts,norm=x=>Object.assign(D0(),x),has=r=>s.staff.includes(r);
+const cap=()=>1+(s.done>=3)+(s.done>=5),RZ=()=>cap()==1?[0]:cap()==2?[-2,2]:[-2.7,0,2.7];
+const rate=()=>BASE[s.done]+s.items.reduce((a,i)=>a+(BON[i]||0),0);
+function save(){s.ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}if(window.cloudSave)window.cloudSave()}
+let tt;function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',3000)}
+/* ---------- three scene ---------- */
+const R=new T.WebGLRenderer({canvas:$('c'),antialias:true});R.setPixelRatio(Math.min(devicePixelRatio||1,2));
+const SC=new T.Scene(),CAM=new T.PerspectiveCamera(52,1,.1,300),HEM=new T.HemisphereLight(0xffffff,0x3a5a3a,.9),SUN=new T.DirectionalLight(0xffffff,.8),LAMP=new T.PointLight(0xffd9a0,0,16),DAYC=new T.Color(0x8fd8f0),NITC=new T.Color(0x0b1d3a);
+SUN.position.set(10,16,8);LAMP.position.set(0,2.4,0);SC.add(HEM,SUN,LAMP);SC.background=new T.Color(0x8fd8f0);
+const MC={},M=c=>MC[c]||(MC[c]=new T.MeshLambertMaterial({color:c}));
+const bx=(w,h,d,c,x,y,z,p)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);(p||SC).add(m);return m};
+const cy=(r,h,c,x,y,z,p)=>{const m=new T.Mesh(new T.CylinderGeometry(r,r,h,10),M(c));m.position.set(x,y,z);(p||SC).add(m);return m};
+const sp=(r,c,x,y,z,p)=>{const m=new T.Mesh(new T.SphereGeometry(r,10,8),M(c));m.position.set(x,y,z);(p||SC).add(m);return m};
+bx(90,.2,90,0x35b56a,0,-.1,0);bx(2.6,.04,14,0xe7cf9a,0,.02,11);bx(.3,1.6,.3,0x8a5a2b,-1.8,.8,17.5);bx(.3,1.6,.3,0x8a5a2b,1.8,.8,17.5);
+function palm(x,z){cy(.18,3.2,0x8a5a2b,x,1.6,z);for(let i=0;i<6;i++){const l=bx(2,.08,.55,0x2fa84f,x+Math.cos(i)*.9,3.3,z+Math.sin(i)*.9);l.rotation.y=-i;l.rotation.z=.35}}
+[[-9,-3],[9,-3],[-11,3],[11,2],[-13,12],[13,12]].forEach(p=>palm(p[0],p[1]));
+const WL=[[-6.25,6.25,-4.2,-3.9],[-6.25,-5.95,-4.2,4.2],[5.95,6.25,-4.2,4.2],[-6.25,-1,3.9,4.2],[1,6.25,3.9,4.2]],hit=(x,z)=>WL.some(w=>x>w[0]-.25&&x<w[1]+.25&&z>w[2]-.25&&z<w[3]+.25),inside=(x,z)=>x>-5.9&&x<5.9&&z>-3.9&&z<3.9;
+const FR=[-5,-2.2],CZ=[-1.2,-2.6],TL=[-5,2.2],FACS=()=>[{id:'fridge',n:'Refrigerator',x:-5,z:-1.6,tx:-5.5,tz:-3.4},{id:'light',n:'Lights',x:0,z:.6,tx:0,tz:-1.5},...RZ().map((z,i)=>({id:'fan'+i,n:'Room '+(i+1)+' fan',x:3.2,z,tx:4,tz:z}))];
+let HG,FW,RF,DOOR,WIN=[],FANS=[];
+function house(n){if(HG)SC.remove(HG);HG=new T.Group();FW=new T.Group();RF=new T.Group();WIN=[];FANS=[];HG.add(FW,RF);SC.add(HG);
+ const th=[0xf2e4b8,0xff8f5a,0x3cc6d9,0xe8337f,0x9b6bd8][s.theme%5],wc=n<2?0xe9c978:n>=5?th:0xc58a54,rc=n<3?0x58c24a:0xd63a31;
+ bx(13,.2,9,n>=1?0xd9c9a0:0xb89560,0,.1,0,HG);bx(4,.06,8.4,0xf4f1ea,-4,.23,0,HG);bx(4,.06,8.4,0xc48a52,0,.23,0,HG);bx(4,.06,8.4,0xd9a066,4,.23,0,HG);
+ bx(12.5,2.8,.25,wc,0,1.6,-4.06,HG);bx(.25,2.8,8.3,wc,-6.1,1.6,0,HG);bx(.25,2.8,8.3,wc,6.1,1.6,0,HG);
+ bx(5.2,2.8,.25,wc,-3.6,1.6,4.06,FW);bx(5.2,2.8,.25,wc,3.6,1.6,4.06,FW);bx(2,.8,.25,wc,0,2.6,4.06,FW);
+ const a=Math.atan2(1.4,4.8),L=Math.hypot(1.4,4.8)+.4;bx(14,.18,L,rc,0,3.7,2.3,RF).rotation.x=a;bx(14,.18,L,rc,0,3.7,-2.3,RF).rotation.x=-a;
+ DOOR=new T.Group();DOOR.position.set(-1,0,4.06);bx(2,2.2,.12,n>=5?0xe8337f:0x6b4423,1,1.3,0,DOOR);HG.add(DOOR);
+ if(n>=4)[-3.6,3.6].forEach(x=>{const w=new T.Mesh(new T.BoxGeometry(1.2,1,.1),new T.MeshLambertMaterial({color:0x9fe3f5,emissive:0}));w.position.set(x,1.8,4.2);FW.add(w);WIN.push(w)});
+ const rz=RZ();if(rz.length==2)bx(4,1.3,.12,0xe8d3a4,4,.85,0,HG);if(rz.length==3){bx(4,1.3,.12,0xe8d3a4,4,.85,-1.35,HG);bx(4,1.3,.12,0xe8d3a4,4,.85,1.35,HG)}
+ rz.forEach(z=>{bx(1.4,.4,2,0x8a5a2b,4.9,.45,z,HG);bx(1.3,.25,1.9,s.items.includes('mattress')?0xffd27a:0xf2f2f2,4.9,.75,z,HG);bx(.5,.12,.5,0xffffff,5.4,.95,z,HG);
+  const f=new T.Group();f.position.set(4,2.7,z);bx(1.4,.05,.2,0x888888,0,0,0,f);bx(.2,.05,1.4,0x888888,0,0,0,f);HG.add(f);FANS.push(f);
+  if(s.items.includes('ac'))bx(1.1,.35,.3,0xfafafa,5.8,2.4,z,HG)});
+ bx(.9,1.8,.8,0xe9eef2,-5.5,1.1,-3.4,HG);bx(2.2,.9,.7,0xb98a5a,-4.2,.65,-3.55,HG);bx(.8,.1,.6,0x222222,-3.2,1.12,-3.55,HG);bx(1.2,.7,1.2,0xc9a06a,-4.5,.6,.5,HG);
+ bx(1.2,1.8,.7,0x8a5a2b,-1.2,1.1,-3.6,HG);bx(.8,.5,.5,0xd63a31,-5.2,.5,2.6,HG);bx(2,.9,.6,0x6b4423,.2,.65,-2.2,HG);
+ const it=s.items.includes.bind(s.items);
+ if(it('sofa')){bx(1.8,.6,.8,0xe8337f,-1.2,.55,2.4,HG);bx(1.8,.7,.2,0xc42a6b,-1.2,1,2.85,HG)}
+ if(it('tv'))bx(1.4,.8,.1,0x111111,0,1.7,-3.9,HG);
+ if(it('plants'))[-5.6,5.6].forEach(x=>{bx(.5,.4,.5,0xb5651d,x,.45,3.3,HG);sp(.45,0x2fa84f,x,1,3.3,HG)});
+ if(it('rug'))bx(2.6,.03,1.8,0xff5a4d,0,.27,.4,HG);
+ if(it('wifi'))bx(.3,.15,.2,0x222222,-2,2.4,-3.9,HG);if(it('heater'))cy(.3,.8,0xcfd8dc,-5.9,1.6,-.6,HG);
+ if(it('cctv'))bx(.3,.2,.3,0x222222,1.6,3.2,4.2,HG);
+ if(has('guard')){bx(1.4,2,1.4,0x3d7a8c,9,1,8,HG);bx(1.8,.2,1.8,0x2b4f9e,9,2.1,8,HG)}if(has('driver')){bx(2.6,1.1,1.3,0xf5f5f5,-10,.75,8,HG);bx(1.2,.7,1.2,0x9fe3f5,-9.6,1.6,8,HG)}
+ if(has('gardener'))for(let i=0;i<10;i++)sp(.2,[0xff5a4d,0xffc233,0xe8337f][i%3],i%2?1.8:-1.8,.25,5+i*1.1,HG);
+ if(s.proj){[[-6.6,-4.6],[6.6,-4.6],[-6.6,4.6],[6.6,4.6]].forEach(p=>bx(.2,4,.2,0xb5651d,p[0],2,p[1],HG));bx(13.4,.15,.15,0xb5651d,0,3.6,4.6,HG)}}
+const NPC=(col,hat)=>{const g=new T.Group(),lg=x=>{const m=new T.Mesh(new T.BoxGeometry(.16,.55,.2).translate(0,-.275,0),M(0x33415a));m.position.set(x,.58,0);g.add(m);return m};
+ const b=new T.Mesh(new T.CylinderGeometry(.28,.34,.8,10),M(col));b.position.y=.98;g.add(b);sp(.26,0xf2c9a0,0,1.62,0,g);bx(.5,.14,.5,hat||0x3b2a1a,0,1.86,0,g);g.userData={L:lg(-.12),R:lg(.12)};SC.add(g);return g};
+const V3=new T.Vector3(),TGL=$('lab');
+function tg(o,html,x,y,z){let t=o.tg;if(!t){t=o.tg={el:document.createElement('div'),h:null};t.el.className='t';TGL.appendChild(t.el)}if(t.h!==html){t.h=html;t.el.innerHTML=html}
+ V3.set(x,y,z).project(CAM);const v=html&&V3.z<1;t.el.style.display=v?'block':'none';if(v){t.el.style.left=(V3.x*.5+.5)*innerWidth+'px';t.el.style.top=(-V3.y*.5+.5)*innerHeight+'px'}}
+const tgx=o=>{if(o.tg){o.tg.el.remove();o.tg=null}};
+/* ---------- entities ---------- */
+const AV={x:0,z:10,ry:0,ph:0,mv:false,g:NPC(0xff5a4d,0xffc233)};Object.defineProperty(AV,'hand',{get:()=>s.hand});let C=[],W=[],PP=[],cid=0,clk=0,vis=false,visT=0,acc=0,bt=0,sv=0,MD=false;
+function place(e,dt){const g=e.g;g.position.set(e.x,0,e.z);let d=e.ry-g.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));g.rotation.y+=d*Math.min(1,dt*10);
+ const u=g.userData;if(e.mv){e.ph+=dt*10;u.L.rotation.x=Math.sin(e.ph)*.7;u.R.rotation.x=-Math.sin(e.ph)*.7;g.position.y=Math.abs(Math.sin(e.ph))*.06}else u.L.rotation.x=u.R.rotation.x=0}
+function route(e,tx,tz){const a=inside(e.x,e.z),b=inside(tx,tz),p=[];if(a&&!b)p.push([0,2.7],[0,5.5]);else if(!a&&b)p.push([0,5.5],[0,2.7]);p.push([tx,tz]);return p}
+function step(e,dt,sp){const p=e.path;if(!p||!p.length)return true;const[tx,tz]=p[0],dx=tx-e.x,dz=tz-e.z,d=Math.hypot(dx,dz);if(d<.12){p.shift();return !p.length}const v=Math.min(d,sp*dt);e.x+=dx/d*v;e.z+=dz/d*v;e.ry=Math.atan2(dx,dz);e.mv=true;return false}
+function pop(x,z,t){PP.push({x,z,t,life:1.6})}
+function rate_(st,c){const n=Math.min(s.rn,40);s.rep=(s.rep*n+st)/(n+1);s.rn++;s.revs.unshift({s:st,t:REV[st][Math.random()*REV[st].length|0],n:NM[Math.random()*NM.length|0],d:s.day});s.revs=s.revs.slice(0,30)}
+function spawnC(){const i=C.filter(c=>c.st=='in'||c.st=='wait').length,c={id:++cid,x:-14,z:18,ry:0,ph:0,st:'in',pat:45,wt:0,path:[[0,7.5+i*1.2]],g:NPC([0x3cc6d9,0xffc233,0x22b573,0xe8337f,0x9b6bd8,0xf08a1c][Math.random()*6|0],[0x222222,0x6b4423,0xd9a066][Math.random()*3|0])};C.push(c)}
+function arrive(){const w=C.filter(c=>c.st=='in'||c.st=='wait').length,occ=C.filter(c=>c.st=='go'||c.st=='stay').length,p=clamp(.5+.07*(s.rep-3)+(has('gardener')?.05:0)+(has('driver')?.15:0)+(s.items.includes('wifi')?.05:0),.15,.95);if(w<2&&occ+w<cap()+1&&Math.random()<p)spawnC()}
+function welcome(c,by){if(c.st!='wait')return;const rz=RZ(),i=rz.findIndex((z,k)=>!C.some(o=>o.room===k&&o.st!='out'));if(i<0)return toast('No free room. Wait for a checkout or renovate for more rooms.');
+ c.room=i;c.st='go';c.claim=0;c.path=route(c,3.2,rz[i]);toast('Welcome!')}
+function mkReq(){const ks=[...RKS].sort(()=>Math.random()-.5);return[{k:ks[0],at:rnd(3,7),st:'wait'},{k:ks[1],at:rnd(14,19),st:'wait'}]}
+function leaveAngry(c){c.st='out';c.path=route(c,-14,18);rate_(1);pop(c.x,c.z,'😠 left')}
+function serve(c,q,w){q.st='done';q.claim=0;q.fee=RQK[q.k].f;q.fast=c.el-q.t0<9;if(w)w.carry=null;pop(c.x,c.z,'✔ '+RQK[q.k].em);sfx()}
+function checkout(c){let ms=0,fee=0,tip=0;c.rq.forEach(q=>{if(q.st=='done'){fee+=q.fee;if(q.fast)tip+=60}else ms++});
+ const cf=s.items.length>=3;let st=3+(ms==0?1:0)-ms+(cf?1:0)-(c.hot?1:0)-(c.dark?1:0)-(c.wt>25?1:0);st=clamp(Math.round(st),1,5);
+ const base=rate()*(st<=2?.8:1),pay=Math.round(base+fee+tip+(st==5?base*.1:0));s.cash+=pay;s.earn+=pay;rate_(st);
+ pop(c.x,c.z,'+₱'+fmt(pay)+' '+'⭐'.repeat(st));sfx();c.st='out';c.path=route(c,-14,18);save()}
+function cupdate(c,dt){c.mv=false;
+ if(c.st=='in'){if(step(c,dt,3))c.st='wait'}
+ else if(c.st=='wait'){c.wt+=dt;c.pat-=dt;if(c.pat<=0)leaveAngry(c)}
+ else if(c.st=='go'){if(step(c,dt,3)){c.st='stay';c.t=STAY;c.el=0;c.rq=mkReq();c.ry=Math.PI/2}}
+ else if(c.st=='stay'){c.t-=dt;c.el+=dt;c.rq.forEach(q=>{if(q.st=='wait'&&c.el>=q.at){q.st='act';q.t0=c.el;sfx()}if(q.st=='act'&&c.el-q.t0>16){q.st='miss';q.claim=0;pop(c.x,c.z,'😠')}});
+  if(s.bad['fan'+c.room]){c.hotT=(c.hotT||0)+dt;if(c.hotT>3)c.hot=true}if(clk>=30&&s.bad.light){c.darkT=(c.darkT||0)+dt;if(c.darkT>3)c.dark=true}
+  if(c.t<=0)checkout(c)}
+ else if(c.st=='out'){if(step(c,dt,3))c.dead=true}}
+/* ---------- player actions ---------- */
+const needs=ks=>{for(const c of C)if(c.st=='stay')for(const q of c.rq)if(q.st=='act'&&!q.claim&&ks.includes(q.k))return{c,q}};
+const STK={meal:'🍲',drink:'🥤',linen:'🛏️',towel:'🧺',kit:'🛠️',part:'🔧'};
+function target(){let best=null,bd=99;const near=(x,z,r,o)=>{const d=Math.hypot(AV.x-x,AV.z-z);if(d<r&&d<bd){bd=d;best=o}};
+ C.forEach(c=>{if(c.st=='wait')near(c.x,c.z,2.3,{l:'👋 Welcome',f:()=>welcome(c)})});
+ const h=s.hand;FACS().forEach(f=>{
+  if(h.part>0&&s.bad[f.id])near(f.x,f.z,1.9,{l:'🔧 Repair '+f.n,f:()=>{h.part--;s.bad[f.id]=false;s.wear[f.id]=Math.max(0,(s.wear[f.id]||0)-40);pop(AV.x,AV.z,'✔ fixed');sfx();save()}});
+  if(h.kit>0&&s.due[f.id]&&!s.bad[f.id])near(f.x,f.z,1.9,{l:'🛠️ Service '+f.n,f:()=>{h.kit--;s.due[f.id]=false;s.wear[f.id]=0;pop(AV.x,AV.z,'✔ serviced');sfx();save()}})});
+ return best}
+/* ---------- staff ---------- */
+function syncStaff(){W=W.filter(w=>{if(s.staff.includes(w.role))return true;SC.remove(w.g);tgx(w);return false});
+ s.staff.forEach(r=>{if(!W.some(w=>w.role==r)){const h=HOMES[r];W.push({role:r,x:h[0],z:h[1],ry:0,ph:0,path:[],job:null,carry:null,g:NPC(COLS[r])})}});house(s.done)}
+const FC={};
+function wfind(w){const r=w.role;
+ if(r=='cook'||r=='housekeeper'){const ks=r=='cook'?['meal','drink']:['linen','towel'],st=r=='cook'?FR:CZ;if(r=='cook'&&s.bad.fridge)return;const n=needs(ks);if(!n||!(s.inv[n.q.k]>0))return;const{c,q}=n;q.claim=w;const rz=RZ();
+  const ab=()=>{q.claim=0;w.job=null;if(w.carry){s.inv[w.carry]++;w.carry=null}};
+  return{steps:[{p:[st[0],st[1]],f:()=>{if(q.st!='act'||!(s.inv[q.k]>0))return ab();s.inv[q.k]--;w.carry=q.k}},{p:[3.2,rz[c.room]],f:()=>{if(q.st=='act'&&C.includes(c)&&w.carry)serve(c,q,w);else ab()}}]}}
+ if(r=='receptionist'){const c=C.find(c=>c.st=='wait'&&!c.claim);if(!c||!RZ().some((z,k)=>!C.some(o=>o.room===k&&o.st!='out')))return;c.claim=1;return{steps:[{p:[c.x,c.z-1.2],f:()=>{c.claim=0;welcome(c)}}]}}
+ if(r=='maintenance'){const F=FACS(),f=F.find(f=>s.bad[f.id]&&!FC[f.id]&&s.inv.part>0)||F.find(f=>s.due[f.id]&&!s.bad[f.id]&&!FC[f.id]&&s.inv.kit>0);if(!f)return;FC[f.id]=w;const bad=s.bad[f.id];
+  return{steps:[{p:[f.x,f.z],f:()=>{delete FC[f.id];if(bad&&s.bad[f.id]&&s.inv.part>0){s.inv.part--;s.bad[f.id]=false;s.wear[f.id]=Math.max(0,(s.wear[f.id]||0)-40);pop(f.x,f.z,'✔ fixed')}else if(!bad&&s.due[f.id]&&s.inv.kit>0){s.inv.kit--;s.due[f.id]=false;s.wear[f.id]=0;pop(f.x,f.z,'✔ serviced')}}}]}}}
+function wupdate(w,dt){w.mv=false;
+ if(w.job){const st=w.job.steps[0];if(!st){w.job=null;return}if(!st.go){st.go=1;w.path=route(w,st.p[0],st.p[1])}if(step(w,dt,4.2)){w.job&&w.job.steps.shift();st.f&&st.f()}return}
+ w.cd=(w.cd||0)-dt;if(w.cd<=0){w.cd=1;w.job=wfind(w)||null;if(w.job)return}
+ if(!w.path.length&&Math.random()<dt*.25){const h=HOMES[w.role];w.path=[[h[0]+rnd(-1.2,1.2),h[1]+rnd(-1.2,1.2)]]}step(w,dt,1.2)}
+/* ---------- time, events, economy ---------- */
+function dawn(){s.day++;let pay=0;s.staff=s.staff.filter(r=>{const o=ROLES.find(x=>x.r==r);if(s.cash>=o.w){s.cash-=o.w;pay+=o.w;return true}toast(o.n+' quit: no money for wages');return false});syncStaff();
+ FACS().forEach(f=>{s.wear[f.id]=Math.min(100,(s.wear[f.id]||0)+rnd(8,22));if(s.day%2==0&&s.wear[f.id]>=25)s.due[f.id]=true});
+ if(pay)toast('Day '+s.day+': wages paid ₱'+fmt(pay));
+ if(s.day>2&&!has('guard')&&!s.items.includes('cctv')&&Math.random()<.2){const l=Math.min(s.cash,Math.round(rnd(400,1500)));s.cash-=l;toast('Break-in last night! Lost ₱'+fmt(l)+'. Hire a guard or install CCTV.')}save()}
+function breakdowns(){FACS().forEach(f=>{if(!s.bad[f.id]&&Math.random()<.03+(s.wear[f.id]||0)/1500){s.bad[f.id]=true;toast('⚠ '+f.n+' broke down!')}})}
+function light(){const d=vis?.9:clamp(.5+Math.sin(Math.PI*clk/30)*.7,.12,1),n=!vis&&clk>=30;SC.background.copy(NITC).lerp(DAYC,d);HEM.intensity=.3+.7*d;SUN.intensity=.9*d;LAMP.intensity=(1-d)*(s.bad.light?.25:1.4);WIN.forEach(w=>w.material.emissive.setHex(n?0xffd070:0))}
+function crewCost(i,k){const p=PH[i],m=CR[k];let l=0,wd=0,dd=0;p.c.forEach(([t,d])=>{l+=TR[t]*d;wd+=d;dd=Math.max(dd,d)});return{l:Math.round(l*m.l),m:k=='diy'?0:wd*100,s:Math.round(12*Math.max(1,dd*m.d))}}
+/* ---------- main loop ---------- */
+const K={};addEventListener('keydown',e=>{K[e.key]=1;if((e.key=='e'||e.key==' ')&&TG0&&!MD)TG0.f()});addEventListener('keyup',e=>K[e.key]=0);
+let jx=0,jz=0,jid=null,TG0=null;const JS=$('js'),KN=$('kn');
+function jm(e){const r=JS.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dz=e.clientY-(r.top+r.height/2),d=Math.hypot(dx,dz),m=Math.min(d,50),a=Math.atan2(dz,dx);jx=d<8?0:Math.cos(a)*m/50;jz=d<8?0:Math.sin(a)*m/50;KN.style.transform=`translate(${jx*40}px,${jz*40}px)`}
+JS.addEventListener('pointerdown',e=>{jid=e.pointerId;JS.setPointerCapture(jid);jm(e)});JS.addEventListener('pointermove',e=>{if(e.pointerId==jid)jm(e)});
+const jend=e=>{if(e.pointerId==jid){jid=null;jx=jz=0;KN.style.transform='translate(0,0)'}};JS.addEventListener('pointerup',jend);JS.addEventListener('pointercancel',jend);
+$('act').addEventListener('pointerdown',e=>{e.preventDefault();if(TG0&&!MD)TG0.f()});$('carry').onclick=()=>openM(pgInv);
+const FT={},PLK={},PLS={},KIT=[-4.2,-.6],STO=[-1.2,-2.4];
+const handStr=()=>Object.entries(s.hand).filter(e=>e[1]>0).map(e=>STK[e[0]]+'×'+e[1]).join(' ');
+function placeTag(o,html,x,y,z,fn){tg(o,html,x,y,z);if(o.tg&&!o.tg.set){o.tg.set=1;o.tg.el.classList.add('pl');o.tg.el.onclick=fn}}
+function openPlace(t){const p=t=='k'?KIT:STO;if(Math.hypot(AV.x-p[0],AV.z-p[1])>4.5)return toast('Walk to the '+(t=='k'?'KITCHEN':'STORAGE')+' first');
+ openM(t=='k'?()=>pgStock('🍳 <b>KITCHEN</b>',['meal','drink'],1):()=>pgStock('📦 <b>STORAGE</b>',['linen','towel','kit','part'],0))}
+function takeItem(k){if(k=='meal'||k=='drink'){if(s.bad.fridge)return toast('The fridge is broken. Repair it first.')}if(!(s.inv[k]>0))return toast('Out of stock. Buy more in the Shop.');s.inv[k]--;s.hand[k]=(s.hand[k]|0)+1;sfx();save();pg()}
+function putBack(k){if(s.hand[k]>0){s.hand[k]--;s.inv[k]=(s.inv[k]||0)+1;save();pg()}}
+function serveTap(id){const c=C.find(o=>o.id==id);if(!c||c.st!='stay')return;const aq=c.rq.filter(q=>q.st=='act');if(!aq.length)return;
+ if(Math.hypot(AV.x-c.x,AV.z-c.z)>3.2)return toast('Walk closer to the guest to serve');
+ const q=aq.find(q=>s.hand[q.k]>0);if(!q){const k=aq[0].k;return toast("You don't have "+RQK[k].em+' '+RQK[k].n+' at hand. Get it from the '+(k=='meal'||k=='drink'?'KITCHEN':'STORAGE')+'.')}
+ s.hand[q.k]--;serve(c,q);save()}
+$('lab').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b)serveTap(+b.dataset.c)});
+function update(dt){
+ if(vis){visT+=dt;const a=visT*.25;CAM.position.set(Math.sin(a)*22,13,Math.cos(a)*22);CAM.lookAt(0,1,0);light();return}
+ clk+=dt;if(clk>=60){clk-=60;dawn()}light();const night=clk>=30;
+ let vx=jx+(K.ArrowRight||K.d?1:0)-(K.ArrowLeft||K.a?1:0),vz=jz+(K.ArrowDown||K.s?1:0)-(K.ArrowUp||K.w?1:0);const m=Math.hypot(vx,vz);if(m>1){vx/=m;vz/=m}
+ AV.mv=false;if(m>.1&&!MD){const nx=AV.x+vx*5.5*dt,nz=AV.z+vz*5.5*dt;if(!hit(nx,AV.z))AV.x=nx;if(!hit(AV.x,nz))AV.z=nz;AV.x=clamp(AV.x,-28,28);AV.z=clamp(AV.z,-25,24);AV.ry=Math.atan2(vx,vz);AV.mv=true}
+ acc+=dt;if(acc>=(night?10:5)){acc=0;arrive()}bt+=dt;if(bt>=8){bt=0;breakdowns()}sv+=dt;if(sv>=4){sv=0;save()}
+ if(s.proj){s.proj.t-=dt;if(s.proj.t<=0){s.done++;s.proj=null;house(s.done);toast('Renovation complete! Level '+s.done);sfx();save()}}
+ C.forEach(c=>cupdate(c,dt));C.filter(c=>c.dead).forEach(c=>{SC.remove(c.g);tgx(c)});C=C.filter(c=>!c.dead);W.forEach(w=>wupdate(w,dt));
+ const ins=inside(AV.x,AV.z);FW.visible=RF.visible=!ins;
+ let op=0;[AV,...C,...W].forEach(e=>{if(Math.hypot(e.x,e.z-4)<2.6)op=1});DOOR.rotation.y+=((op?-1.6:0)-DOOR.rotation.y)*Math.min(1,dt*6);
+ FANS.forEach((f,i)=>{if(!s.bad['fan'+i])f.rotation.y+=dt*8});
+ [AV,...C,...W].forEach(e=>place(e,dt));
+ CAM.position.x+=(AV.x-CAM.position.x)*Math.min(1,dt*4);CAM.position.y=12.5;CAM.position.z+=(AV.z+10.5-CAM.position.z)*Math.min(1,dt*4);CAM.lookAt(CAM.position.x,0,CAM.position.z-10.5);
+ TG0=MD?null:target();const ab=$('act');ab.style.display=TG0?'block':'none';if(TG0&&ab.textContent!==TG0.l)ab.textContent=TG0.l;
+ $('cash').textContent=fmt(s.cash);$('rep').textContent=s.rep.toFixed(1);$('clk').textContent=(night?'🌙 Night':'☀️ Day')+' '+s.day+' · '+Math.ceil(night?60-clk:30-clk)+'s';
+ const hs=handStr(),cr=$('carry');cr.hidden=!hs;if(hs)cr.textContent='✋ '+hs;
+ /* tags */
+ tg(AV,'<span style="font-size:13px">You '+handStr().replace(/×\d+/g,'')+'</span>',AV.x,2.2,AV.z);
+ C.forEach(c=>{let h='';if(c.st=='wait')h='<div class="bb">👋</div><div class="bar"><i style="width:'+Math.round(c.pat/45*10)*10+'%"></i></div>';
+  else if(c.st=='stay'){const aq=c.rq.filter(q=>q.st=='act'),q=aq[0];h=q?'<div class="bb" data-c="'+c.id+'">'+aq.map(x=>RQK[x.k].em).join(' ')+'</div><div class="bar"><i style="width:'+Math.round((1-(c.el-q.t0)/16)*10)*10+'%"></i></div>':'<span>'+Math.ceil(c.t)+'s'+(c.hot?' 🥵':'')+(c.dark?' 🔦':'')+'</span>'}tg(c,h,c.x,2.3,c.z)});
+ W.forEach(w=>tg(w,ROLES.find(r=>r.r==w.role).e+(w.carry?STK[w.carry]:''),w.x,2.2,w.z));
+ FACS().forEach(f=>tg(FT[f.id]||(FT[f.id]={}),s.bad[f.id]?'⚠️':s.due[f.id]?'🔧':'',f.tx,2.7,f.tz));
+ tg(FT.proj||(FT.proj={}),s.proj?'🔨 '+Math.round(100*(1-s.proj.t/s.proj.T))+'%':'',0,4.8,0);
+ placeTag(PLK,'<b class="plb">🍳 KITCHEN</b>',-4.2,2.5,-.6,()=>openPlace('k'));placeTag(PLS,'<b class="plb">📦 STORAGE</b>',-1.2,2.5,-2.4,()=>openPlace('s'));
+ PP.forEach(p=>{p.life-=dt;tg(p,'<span style="font-size:18px">'+p.t+'</span>',p.x,2.6+(1.6-p.life)*.9,p.z)});PP.filter(p=>p.life<=0).forEach(tgx);PP=PP.filter(p=>p.life>0)}
+function resize(){R.setSize(innerWidth,innerHeight);CAM.aspect=innerWidth/innerHeight;CAM.updateProjectionMatrix()}addEventListener('resize',resize);
+let last=performance.now();function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;try{update(dt)}catch(e){console.error(e)}R.render(SC,CAM);requestAnimationFrame(loop)}
+/* ---------- menus ---------- */
+let PG=null,SHC='Food & Supplies';
+const chip=(t,on,fn)=>`<button class="chip ${on?'sel':''}" onclick="${fn}">${t}</button>`,head=t=>`<h2>${t}<button class="mini" onclick="closeM()">Close</button></h2>`;
+function openM(p){PG=p;MD=true;$('md').classList.add('open');pg()}function closeM(){PG=null;MD=false;$('md').classList.remove('open')}function pg(){if(PG)$('mc').innerHTML=PG()}
+function pgReno(){const n=s.done,P=PH[n];let h=head('🔨 Renovation')+`<p class="note">House level <b>${n}/5</b> · room rate ₱${fmt(rate())} per night · ${cap()} room(s)</p>`;
+ if(s.proj)h+=`<p><b>Building: ${PH[s.proj.i].n}</b> ${Math.round(100*(1-s.proj.t/s.proj.T))}%</p>`;
+ else if(!P)h+='<p>Fully renovated. Add appliances and furniture in the Shop.</p>';
+ else{const cc=crewCost(n,s.crew);let miss=0,rows='';for(const k in P.m){const have=s.mat[k]||0,need=P.m[k];if(have<need)miss+=(need-have)*MT[k].p;rows+=`<div class="rw"><span>${MT[k].e} ${MT[k].n}</span><b style="color:${have>=need?'#128a4f':'#b3123d'}">${have}/${need}</b></div>`}
+  h+=`<h3>Next: ${P.n}</h3>${rows}<div class="chips">${Object.keys(CR).map(k=>chip(CR[k].t,k==s.crew,`setCrew('${k}')`)).join('')}</div><p class="note">Labor ₱${fmt(cc.l)} + meals ₱${fmt(cc.m)} · about ${cc.s}s of work</p>`;
+  if(miss)h+=`<button class="go alt" onclick="buyMissing()">Buy missing materials · ₱${fmt(miss)}</button>`;
+  h+=`<button class="go" ${miss||s.cash<cc.l+cc.m?'disabled':''} onclick="startProj()">Start · pay ₱${fmt(cc.l+cc.m)}</button>`}
+ h+='<h3>Design</h3><p class="note">Exterior color (level 5):</p><div class="chips">'+[0xf2e4b8,0xff8f5a,0x3cc6d9,0xe8337f,0x9b6bd8].map((c,i)=>`<button class="sw ${s.theme==i?'sel':''}" style="background:#${c.toString(16).padStart(6,'0')}" onclick="setTheme(${i})" aria-label="Color ${i+1}"></button>`).join('')+'</div>';
+ h+=`<p class="note">Interior: buy furniture and appliances in the Shop. Owned: ${s.items.length?s.items.map(i=>SH.find(x=>x.id==i).e).join(' '):'none yet'}</p><button class="go alt" onclick="openM(pgShop)">🛒 Open Shop</button>`;return h}
+function pgShop(){let h=head('🛒 Shop')+'<div class="chips">'+['Food & Supplies','Materials','Appliances','Furniture','Services'].map(c=>chip(c,c==SHC,`SHC='${c}';pg()`)).join('')+'</div>';
+ SH.filter(x=>x.c==SHC).forEach(x=>{const own=x.t=='own'&&s.items.includes(x.id),st=x.t=='inv'?s.inv[x.id]||0:x.t=='mat'?s.mat[x.id]||0:null;
+  h+=`<div class="rw"><span>${x.e} ${x.n}<small>${x.d}${st!=null?' · in stock: '+st:''}</small></span><span class="pr">₱${fmt(x.p)}</span>${own?'<b>Owned ✔</b>':`<button class="mini" onclick="buy('${x.id}',1)">Buy</button>`+(x.t=='inv'||x.t=='mat'?`<button class="mini" onclick="buy('${x.id}',5)">×5</button>`:'')}</div>`});return h}
+function pgStaff(){const tot=s.staff.reduce((a,r)=>a+ROLES.find(x=>x.r==r).w,0);let h=head('👥 Staff')+`<p class="note">Daily payroll: <b>₱${fmt(tot)}</b>, paid at dawn each day.</p>`;
+ ROLES.forEach(o=>{const on=has(o.r);h+=`<div class="rw"><span>${o.e} ${o.n}<small>${o.d}</small></span><span class="pr">₱${o.w}/day</span><button class="mini ${on?'red':''}" onclick="${on?'fire':'hire'}('${o.r}')">${on?'Fire':'Hire'}</button></div>`});return h}
+function pgDash(){const n=s.revs.length,cnt=[1,2,3,4,5].map(k=>s.revs.filter(r=>r.s==k).length);let h=head('📊 Dashboard')+`<div class="gs"><span>⭐ <b>${s.rep.toFixed(2)}</b> / 5</span><span>${s.rn} reviews</span><span>Earned ₱${fmt(s.earn)}</span><span>Day ${s.day}</span></div>`;
+ h+=[5,4,3,2,1].map(k=>`<div class="rw"><span>${'⭐'.repeat(k)}</span><div class="bar2"><i style="width:${n?100*cnt[k-1]/n:0}%"></i></div><b>${cnt[k-1]}</b></div>`).join('');
+ h+=`<p class="note">Ranking uses your cash and your star rating. <button class="mini" onclick="closeM();$('lb').click()">🏆 Open leaderboard</button></p><h3>Recent reviews</h3>`;
+ h+=n?s.revs.slice(0,8).map(r=>`<div class="rw"><span>${'⭐'.repeat(r.s)} <b>${r.n}</b><small>${r.t} (day ${r.d})</small></span></div>`).join(''):'<p class="note">No reviews yet. Welcome your first guest!</p>';return h}
+const handHtml=()=>`<div class="gs">✋ At hand: <b>${handStr()||'nothing'}</b></div>`;
+function pgStock(title,keys,fr){let h=head(title);if(fr&&s.bad.fridge)h+='<p class="warn">⚠ The fridge is broken. Repair it to take food.</p>';h+=handHtml()+'<p class="note">Tap an item to take it. Then walk to the guest and tap their request bubble.</p>';
+ keys.forEach(k=>{const it=SH.find(x=>x.id==k),n=s.inv[k]||0,rq=C.reduce((a,c)=>a+(c.st=='stay'?c.rq.filter(q=>q.st=='act'&&q.k==k).length:0),0),off=n<1||(fr&&s.bad.fridge);
+  h+=`<div class="rw" ${off?'':`onclick="takeItem('${k}')" style="cursor:pointer"`}><span>${it.e} ${it.n}<small>In stock: ${n}${rq?' · <b style="color:#b3123d">Requested now: '+rq+'</b>':''}</small></span><button class="mini" ${off?'disabled':''}>Take</button></div>`});
+ return h+'<button class="go alt" onclick="closeM()">Done</button>'}
+function pgInv(){const it=k=>SH.find(x=>x.id==k),hd=Object.entries(s.hand).filter(e=>e[1]>0);let h=head('🎒 Inventory')+'<h3>✋ At hand</h3>';
+ h+=hd.length?hd.map(([k,n])=>`<div class="rw"><span>${it(k).e} ${it(k).n}</span><b>×${n}</b><button class="mini" onclick="putBack('${k}')">Put back</button></div>`).join(''):'<p class="note">Nothing in hand. Tap the KITCHEN or STORAGE label in the house to take items.</p>';
+ const sec=(t,ks)=>`<h3>${t}</h3>`+ks.map(k=>`<div class="rw"><span>${it(k).e} ${it(k).n}</span><b>×${s.inv[k]||0}</b></div>`).join('');
+ h+=sec('🍳 Kitchen',['meal','drink'])+sec('📦 Storage',['linen','towel','kit','part']);
+ const mt=Object.keys(s.mat).filter(k=>s.mat[k]>0);h+='<h3>🧱 Renovation materials</h3>'+(mt.length?mt.map(k=>`<div class="rw"><span>${MT[k].e} ${MT[k].n}</span><b>×${s.mat[k]}</b></div>`).join(''):'<p class="note">None. Buy materials in the Shop.</p>');
+ h+='<h3>🛋️ Furniture and appliances</h3>'+(s.items.length?s.items.map(k=>`<div class="rw"><span>${it(k).e} ${it(k).n}</span><b>Owned ✔</b></div>`).join(''):'<p class="note">None yet.</p>');
+ h+='<h3>👥 Staff</h3>'+(s.staff.length?s.staff.map(r=>{const o=ROLES.find(x=>x.r==r);return`<div class="rw"><span>${o.e} ${o.n}</span><b>₱${o.w}/day</b></div>`}).join(''):'<p class="note">No staff hired.</p>');
+ return h+`<p class="note">Cash: <b>₱${fmt(s.cash)}</b></p>`}
+function setCrew(k){s.crew=k;pg()}function setTheme(i){s.theme=i;house(s.done);save();pg()}
+function buyMissing(){const P=PH[s.done];let c=0;for(const k in P.m)c+=Math.max(0,P.m[k]-(s.mat[k]||0))*MT[k].p;if(s.cash<c)return toast('Not enough cash for the materials');s.cash-=c;for(const k in P.m)s.mat[k]=Math.max(s.mat[k]||0,P.m[k]);sfx();save();pg()}
+function startProj(){const P=PH[s.done],cc=crewCost(s.done,s.crew);for(const k in P.m)if((s.mat[k]||0)<P.m[k])return;if(s.cash<cc.l+cc.m)return toast('Not enough cash for the crew');
+ for(const k in P.m)s.mat[k]-=P.m[k];s.cash-=cc.l+cc.m;s.proj={i:s.done,t:cc.s,T:cc.s};house(s.done);save();closeM();toast('Crew started: '+P.n)}
+function useful(id){const F=FACS();return id=='elec'?s.bad.light:id=='tech'?F.some(f=>s.bad[f.id]&&f.id!='light'):F.some(f=>s.bad[f.id]||s.due[f.id]||(s.wear[f.id]||0)>30)}
+function buy(id,q){const it=SH.find(x=>x.id==id),cost=it.p*q;if(it.t=='own'&&s.items.includes(id))return;if(s.cash<cost)return toast('Not enough cash');
+ if(it.t=='svc'&&id!='deliv'&&!useful(id))return toast('Nothing to fix right now');s.cash-=cost;
+ if(it.t=='inv')s.inv[id]=(s.inv[id]||0)+q;else if(it.t=='mat')s.mat[id]=(s.mat[id]||0)+q;else if(it.t=='own'){s.items.push(id);house(s.done)}
+ else{const F=FACS();if(id=='elec')s.bad.light=false;if(id=='tech')F.forEach(f=>{if(f.id!='light')s.bad[f.id]=false});if(id=='crew')F.forEach(f=>{s.bad[f.id]=false;s.due[f.id]=false;s.wear[f.id]=0});if(id=='deliv'){s.inv.meal+=5;s.inv.drink+=5}toast(it.n+' done')}
+ sfx();save();pg()}
+function hire(r){const o=ROLES.find(x=>x.r==r);if(s.cash<o.w)return toast('Need ₱'+o.w+' for the first day wage');s.cash-=o.w;s.staff.push(r);syncStaff();toast(o.n+' hired');save();pg()}
+function fire(r){s.staff=s.staff.filter(x=>x!=r);syncStaff();save();pg()}
+$('bR').onclick=()=>openM(pgReno);$('bS').onclick=()=>openM(pgShop);$('bI').onclick=()=>openM(pgInv);$('bT').onclick=()=>openM(pgStaff);$('bD').onclick=()=>openM(pgDash);
+pgStaff.live=pgDash.live=1;setInterval(()=>{if(PG&&PG.live)pg()},2000);
+/* ---------- PWA + hooks ---------- */
+window.Harong={bootTs,get:()=>s,set:x=>{s=norm(x);syncStaff();save()},
+ visit:(n,nm)=>{vis=true;visT=0;house(n);[AV,...C,...W].forEach(e=>e.g.visible=false);$('vtxt').textContent='Visiting '+nm+'’s harong';$('vbar').style.display='flex';$('lab').style.display='none'}};
+$('vback').onclick=()=>{vis=false;house(s.done);[AV,...C,...W].forEach(e=>e.g.visible=true);$('vbar').style.display='none';$('lab').style.display=''};
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+let dip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('inst').hidden=false});
+$('inst').onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$('inst').hidden=true};addEventListener('appinstalled',()=>{$('inst').hidden=true;toast('Harong installed')});
+/* ---------- sound: bayan ambience (all synthesized, no files) ---------- */
+let AC,master,snd=true;try{snd=localStorage.getItem('harong-snd')!=='off'}catch(e){}
+const SCL=[146.83,196,220,246.94,293.66,329.63,392,440,493.88,587.33];
+function note(f,v=.08,len=1.8){const t=AC.currentTime,g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0005,t+len);g.connect(master);
+ [['triangle',f,1],['sine',f*2,.3]].forEach(([ty,fr,m])=>{const o=AC.createOscillator(),q=AC.createGain();o.type=ty;o.frequency.value=fr;q.gain.value=m;o.connect(q);q.connect(g);o.start(t);o.stop(t+len+.1)})}
+function chirp(t,f){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*(1.15+Math.random()*.4),t+.07);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+.1);o.connect(g);g.connect(master);o.start(t);o.stop(t+.12)}
+function bird(){const f=2800+Math.random()*1800,k=2+Math.floor(Math.random()*4);for(let i=0;i<k;i++)chirp(AC.currentTime+i*.12,f*(1+(i%2)*.12));setTimeout(bird,2500+Math.random()*5500)}
+let mi=4;function mel(){mi=Math.max(0,Math.min(SCL.length-1,mi+[-2,-1,-1,0,1,1,2][Math.random()*7|0]));note(SCL[mi]);if(Math.random()<.25)setTimeout(()=>note(SCL[mi]*1.5,.04,1.2),350);setTimeout(mel,600+Math.random()*1000)}
+function sfx(){if(!AC||!snd)return;note(659.25,.06,.5);setTimeout(()=>note(880,.05,.6),110)}
+function initAudio(){if(AC){AC.resume();return}
+ AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=snd?.9:0;master.connect(AC.destination);
+ const b=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+ const n=AC.createBufferSource();n.buffer=b;n.loop=true;const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2400;bp.Q.value=.5;
+ const g=AC.createGain();g.gain.value=.05;const l=AC.createOscillator(),lg=AC.createGain();l.frequency.value=.17;lg.gain.value=.04;l.connect(lg);lg.connect(g.gain);
+ n.connect(bp);bp.connect(g);g.connect(master);n.start();l.start();
+ const dr=AC.createOscillator(),dg=AC.createGain();dr.frequency.value=73.4;dg.gain.value=.025;dr.connect(dg);dg.connect(master);dr.start();
+ setTimeout(bird,1200);setTimeout(mel,600)}
+function snb(){$('snd').textContent=snd?'🔊':'🔇';if(master)master.gain.value=snd?.9:0}
+$('snd').onclick=e=>{e.stopPropagation();snd=!snd;try{localStorage.setItem('harong-snd',snd?'on':'off')}catch(_){}initAudio();snb()};
+document.addEventListener('pointerdown',()=>initAudio(),{once:true});snb();
+document.addEventListener('visibilitychange',()=>{if(AC)document.hidden?AC.suspend():AC.resume()});
+
+
+/* ---------- start ---------- */
+const away=(Date.now()-s.ts)/1000;
+resize();house(s.done);syncStaff();AV.g.position.set(AV.x,0,AV.z);
+if(!fresh&&away>60){const days=Math.floor(Math.min(away,1800)/60),g=Math.round(days*cap()*rate()*.6),w=days*s.staff.reduce((a,r)=>a+ROLES.find(x=>x.r==r).w,0),net=Math.max(0,g-w);s.cash+=net;if(net>0)toast('Welcome back! Guests paid ₱'+fmt(net)+' while you were away')}
+save();requestAnimationFrame(loop);
+
+</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,collection,query,orderBy,limit,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyAAIRyAD0koM9EWoA92vn3c1Iu39s_tE9U",
+  authDomain: "harong-246de.firebaseapp.com",
+  projectId: "harong-246de",
+  storageBucket: "harong-246de.firebasestorage.app",
+  messagingSenderId: "46039682273",
+  appId: "1:46039682273:web:824a5f61a6289d26fabba0",
+  measurementId: "G-TZHG76KTFM"
+};
+/* Cloud save: anonymous sign-in, one Firestore document per player at users/{uid}. Local save always works offline. */
+try{
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+let uid=null,timer=null,synced=false;
+const H=window.Harong,$=id=>document.getElementById(id),fmt=n=>Math.round(n).toLocaleString('en-PH');
+let name='';try{name=localStorage.getItem('harong-name')||''}catch(e){}
+const score=st=>Math.round(st.cash+st.done*6000),rating=st=>st.qs&&st.qs.length?Math.round((st.rep??3)*20):60;
+async function pushProfile(){if(!uid||!name)return;const st=H.get();await setDoc(doc(db,'profiles',uid),{name,score:score(st),done:st.done,rating:rating(st),day:st.day,updated:Date.now()})}
+async function push(){timer=null;if(!uid||!navigator.onLine)return;try{const st=H.get();await setDoc(doc(db,'users',uid),{state:JSON.stringify(st),ts:st.ts,updated:Date.now()});await pushProfile()}catch(e){}}
+window.cloudSave=()=>{if(uid&&!timer)timer=setTimeout(push,60000)};
+addEventListener('pagehide',()=>{if(timer){clearTimeout(timer);push()}});
+addEventListener('online',push);
+onAuthStateChanged(auth,async u=>{
+ if(!u){signInAnonymously(auth).catch(()=>{});return}
+ uid=u.uid;
+ try{const snap=await getDoc(doc(db,'users',uid));
+  if(snap.exists()){const c=snap.data();if(c.state&&c.ts>window.Harong.bootTs){window.Harong.set(JSON.parse(c.state))}}
+  if(!name){const p=await getDoc(doc(db,'profiles',uid));if(p.exists()){name=p.data().name;try{localStorage.setItem('harong-name',name)}catch(e){}}}
+  synced=true;push()}catch(e){}
+});
+
+async function openLB(){
+ $('lbm').classList.add('open');$('nmin').value=name;const L=$('lbl');L.textContent='Loading…';
+ try{const snap=await getDocs(query(collection(db,'profiles'),orderBy('score','desc'),limit(20)));L.textContent='';let i=0;
+  if(snap.empty)L.textContent='No players yet. Save a name to be the first.';
+  snap.forEach(d=>{const p=d.data();i++;const r=document.createElement('div');r.className='row'+(d.id===uid?' me':'');
+   const rk=document.createElement('span');rk.className='rk';rk.textContent=i;
+   const nm=document.createElement('span');nm.className='nm';nm.textContent=p.name;
+   const sm=document.createElement('small');sm.textContent='₱'+fmt(p.score)+' · '+p.done+'/5 built'+' · '+(p.rating/20).toFixed(1)+'★';nm.appendChild(sm);
+   r.append(rk,nm);
+   if(d.id!==uid){const b=document.createElement('button');b.className='mini';b.textContent='Visit';b.onclick=()=>{$('lbm').classList.remove('open');H.visit(p.done,p.name)};r.appendChild(b)}
+   L.appendChild(r)})}
+ catch(e){L.textContent=navigator.onLine?'Could not load the leaderboard. Check the Firestore rules.':'The leaderboard needs an internet connection.'}}
+$('lb').onclick=openLB;$('lbx').onclick=()=>$('lbm').classList.remove('open');
+$('nmsv').onclick=async()=>{const v=$('nmin').value.replace(/[^\p{L}\p{N} ._-]/gu,'').trim();
+ if(v.length<2){$('nmin').focus();return}
+ name=v;try{localStorage.setItem('harong-name',name)}catch(e){}
+ try{await pushProfile()}catch(e){}openLB()};
+}catch(e){console.warn('Cloud save unavailable',e)}
+</script>
+</body></html>
