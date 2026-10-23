@@ -26,6 +26,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--sea);font-family
 #js{position:fixed;left:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.55)}
 #kn{position:absolute;left:35px;top:35px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.8);pointer-events:none}
 #act{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);min-width:120px;max-width:55vw;padding:14px 18px;display:none;border:0;border-radius:40px;font:inherit;font-size:1.1rem;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--coral),var(--mag));box-shadow:0 5px 0 #9a1f55}
+#sos{position:fixed;left:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 170px);width:58px;height:58px;border-radius:50%;border:3px solid #fff;background:#c2352b;color:#fff;font-size:22px;z-index:9;box-shadow:0 4px 0 #7a1f18}#sos.on{animation:sospulse .6s infinite alternate}@keyframes sospulse{to{box-shadow:0 0 0 10px rgba(194,53,43,.35)}}
+#mm{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);width:110px;height:110px;border-radius:12px;border:3px solid #fff;display:none;background:#58b86a;z-index:9}
 #vbar{position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);z-index:5;display:none;justify-content:space-between;align-items:center;background:var(--mag);color:#fff;border-radius:14px;padding:6px 12px;font-weight:700}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 80px);transform:translateX(-50%);background:var(--mag);color:#fff;padding:6px 16px;border-radius:99px;font-weight:700;display:none;z-index:40;max-width:90%;text-align:center}
 #md,#lbm{position:fixed;inset:0;background:rgba(13,59,76,.82);display:none;align-items:flex-end;justify-content:center;z-index:30}#md.open,#lbm.open{display:flex}
@@ -45,14 +47,13 @@ button:focus-visible,#nmin:focus-visible{outline:3px solid var(--mag);outline-of
 </style></head><body>
 <canvas id="c"></canvas><div id="lab"></div>
 <div id="hud"><span class="pill">₱<b id="cash"></b></span><span class="pill" id="clk"></span><span class="pill">⭐<b id="rep"></b></span><button class="pill" id="carry" hidden></button></div>
-<div id="menu"><button class="mb" id="bR">🔨 Renovate</button><button class="mb" id="bS">🛒 Shop</button><button class="mb" id="bI">🎒 Inventory</button><button class="mb" id="bT">👥 Staff</button><button class="mb" id="bD">📊 Dashboard</button><button class="mb" id="lb">🏆 Rank</button><button class="mb" id="snd">🔊</button><button class="mb" id="inst" hidden>Install</button></div>
-<div id="js" aria-label="Joystick"><div id="kn"></div></div><button id="act"></button>
+<div id="menu"><button class="mb" id="bR">🔨 Renovate</button><button class="mb" id="bS">🛒 Shop</button><button class="mb" id="bI">🎒 Inventory</button><button class="mb" id="bT">👥 Staff</button><button class="mb" id="bD">📊 Dashboard</button><button class="mb" id="bM">🗺️ Map</button><button class="mb" id="lb">🏆 Rank</button><button class="mb" id="snd">🔊</button><button class="mb" id="inst" hidden>Install</button></div>
+<div id="js" aria-label="Joystick"><div id="kn"></div></div><button id="act"></button><button id="sos">🚨</button><canvas id="mm" width="110" height="110"></canvas>
 <div id="vbar"><span id="vtxt"></span><button class="mini" id="vback">Back home</button></div><div id="toast" role="status"></div>
 <div id="md"><div id="mc"></div></div>
-<div id="lbm"><div id="lbc" role="dialog" aria-label="Leaderboard"><h2>Top harongs <button class="mini" id="lbx">Close</button></h2><div id="nmrow"><input id="nmin" maxlength="16" placeholder="Your name (2 to 16 letters)" aria-label="Your name"><button class="mini" id="nmsv">Save name</button></div><div id="lbl"></div></div></div>
+<div id="lbm"><div id="lbc" role="dialog" aria-label="Leaderboard"><h2>Top harongs <button class="mini" id="lbx">Close</button></h2><div id="nmrow"><input id="nmin" maxlength="16" placeholder="Your name (2 to 16 letters)" aria-label="Your name"><button class="mini" id="nmsv">Save name</button></div><div class="chips" id="lbtabs"><button class="chip sel" data-tab="earn">💰 Top Earners</button><button class="chip" data-tab="star">⭐ 5-Star Awards</button><button class="chip" data-tab="asset">🏆 Biggest Assets</button></div><div id="lbl"></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-
 const T=THREE,$=id=>document.getElementById(id),fmt=n=>Math.round(n).toLocaleString('en-PH'),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a);
 /* ---------- data ---------- */
 const KEY='harong-v2',STAY=30;
@@ -83,7 +84,7 @@ const BON={ac:400,heater:100,wifi:150,sofa:100,tv:150,mattress:200,plants:50,rug
 const ROLES=[{r:'cook',n:'Cook',e:'👨‍🍳',w:620,d:'Fetches and serves meals and drinks'},{r:'housekeeper',n:'Housekeeper',e:'🧹',w:520,d:'Delivers bedding and towels'},{r:'receptionist',n:'Receptionist',e:'🛎️',w:570,d:'Welcomes waiting guests'},{r:'maintenance',n:'Maintenance',e:'🔧',w:650,d:'Repairs and services (uses parts and kits)'},{r:'gardener',n:'Gardener',e:'🌴',w:480,d:'Nicer yard, +5% guests'},{r:'guard',n:'Guard',e:'💂',w:700,d:'Stops night break-ins'},{r:'driver',n:'Driver',e:'🚐',w:750,d:'Airport pickups, +15% guests'}];
 const HOMES={cook:[-4.2,.6],housekeeper:[-1.6,-1.6],receptionist:[1,-1.2],maintenance:[-3.2,2.6],gardener:[-5,8],guard:[8,8],driver:[-9,9]},COLS={cook:0xffffff,housekeeper:0x9b6bd8,receptionist:0xe8337f,maintenance:0xf08a1c,gardener:0x2fa84f,guard:0x2b4f9e,driver:0x3cc6d9};
 const REV={5:['Super linis at mabait ang host! 🌴','Feels like home. We will be back!','Fast service, delicious food.'],4:['Maayos ang stay, thank you.','Good value, friendly staff.'],3:['Okay lang, may kulang sa serbisyo.','Decent stay, slow at times.'],2:['Matagal ang serbisyo.','Hindi namin nakuha ang request namin.'],1:['Walang serbisyo, nagutom kami.','Ignored our requests. Not coming back.']},NM=['Maria','Jun','Aiza','Ben','Liza','Carlo','Joy','Mark','Nena','Rico'];
-const D0=()=>({cash:30000,day:1,done:0,rep:3,rn:0,earn:0,revs:[],inv:{meal:4,drink:6,linen:3,towel:3,kit:2,part:1},mat:{},items:[],staff:[],wear:{},bad:{},due:{},proj:null,hand:{},lots:{'0,0':{b:'main'},'0,1':{b:'yard'}},veh:[],theme:0,crew:'kap',ts:Date.now()});
+const D0=()=>({cash:30000,day:1,done:0,rep:3,rn:0,earn:0,revs:[],inv:{meal:4,drink:6,linen:3,towel:3,kit:2,part:1,ext:0,aid:0},mat:{},items:[],staff:[],wear:{},bad:{},due:{},proj:null,hand:{},lots:{'0,0':{b:'main'},'0,1':{b:'yard'}},veh:[],vsel:-1,fireDay:0,safeDay:0,coowners:[],tour:0,theme:0,crew:'kap',ts:Date.now()});
 let s=D0(),fresh=true;try{const x=JSON.parse(localStorage.getItem(KEY));if(x){s=Object.assign(D0(),x);fresh=false}}catch(e){}
 const bootTs=fresh?0:s.ts,norm=x=>Object.assign(D0(),x),has=r=>s.staff.includes(r);
 const LC=k=>k.split(',').map(v=>v*16),bc=id=>Object.values(s.lots).filter(l=>l.b==id).length;
@@ -102,17 +103,18 @@ let tt;function toast(t){const e=$('toast');e.textContent=t;e.style.display='blo
 const R=new T.WebGLRenderer({canvas:$('c'),antialias:true});R.setPixelRatio(Math.min(devicePixelRatio||1,2));
 const SC=new T.Scene(),CAM=new T.PerspectiveCamera(52,1,.1,300),HEM=new T.HemisphereLight(0xffffff,0x3a5a3a,.9),SUN=new T.DirectionalLight(0xffffff,.8),LAMP=new T.PointLight(0xffd9a0,0,16),DAYC=new T.Color(0x8fd8f0),NITC=new T.Color(0x0b1d3a);
 SUN.position.set(10,16,8);LAMP.position.set(0,2.4,0);SC.add(HEM,SUN,LAMP);SC.background=new T.Color(0x8fd8f0);
+const HOMEG=new T.Group(),TWN=new T.Group();SC.add(HOMEG,TWN);TWN.visible=false;
 const MC={},M=c=>MC[c]||(MC[c]=new T.MeshLambertMaterial({color:c}));
 const bx=(w,h,d,c,x,y,z,p)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);(p||SC).add(m);return m};
 const cy=(r,h,c,x,y,z,p)=>{const m=new T.Mesh(new T.CylinderGeometry(r,r,h,10),M(c));m.position.set(x,y,z);(p||SC).add(m);return m};
 const sp=(r,c,x,y,z,p)=>{const m=new T.Mesh(new T.SphereGeometry(r,10,8),M(c));m.position.set(x,y,z);(p||SC).add(m);return m};
-bx(110,.2,110,0x35b56a,0,-.1,0);bx(2.6,.04,14,0xe7cf9a,0,.02,11);bx(.3,1.6,.3,0x8a5a2b,-1.8,.8,17.5);bx(.3,1.6,.3,0x8a5a2b,1.8,.8,17.5);
-function palm(x,z){cy(.18,3.2,0x8a5a2b,x,1.6,z);for(let i=0;i<6;i++){const l=bx(2,.08,.55,0x2fa84f,x+Math.cos(i)*.9,3.3,z+Math.sin(i)*.9);l.rotation.y=-i;l.rotation.z=.35}}
+bx(110,.2,110,0x35b56a,0,-.1,0,HOMEG);bx(2.6,.04,14,0xe7cf9a,0,.02,11,HOMEG);bx(.3,1.6,.3,0x8a5a2b,-1.8,.8,17.5,HOMEG);bx(.3,1.6,.3,0x8a5a2b,1.8,.8,17.5,HOMEG);
+function palm(x,z){cy(.18,3.2,0x8a5a2b,x,1.6,z,HOMEG);for(let i=0;i<6;i++){const l=bx(2,.08,.55,0x2fa84f,x+Math.cos(i)*.9,3.3,z+Math.sin(i)*.9,HOMEG);l.rotation.y=-i;l.rotation.z=.35}}
 [[-9,-8],[9,-8],[-12,9],[12,9],[-13,13],[13,13]].forEach(p=>palm(p[0],p[1]));
 const WL=[[-6.25,6.25,-4.2,-3.9],[-6.25,-5.95,-4.2,4.2],[5.95,6.25,-4.2,4.2],[-6.25,-1,3.9,4.2],[1,6.25,3.9,4.2]],hit=(x,z)=>WL.some(w=>x>w[0]-.25&&x<w[1]+.25&&z>w[2]-.25&&z<w[3]+.25),inside=(x,z)=>x>-5.9&&x<5.9&&z>-3.9&&z<3.9;
 const FR=[-5,-2.2],CZ=[-1.2,-2.6],TL=[-5,2.2],FACS=()=>[{id:'fridge',n:'Refrigerator',x:-5,z:-1.6,tx:-5.5,tz:-3.4},{id:'light',n:'Lights',x:0,z:.6,tx:0,tz:-1.5},...ROOMS().map(r=>({id:r.fid,n:r.n,x:r.x,z:r.z,tx:r.tx,tz:r.tz}))];
 let HG,FW,RF,DOOR,LG,WIN=[],FANS=[],FANL=[];
-function house(n){if(HG)SC.remove(HG);HG=new T.Group();FW=new T.Group();RF=new T.Group();WIN=[];FANS=[];HG.add(FW,RF);SC.add(HG);
+function house(n){if(HG)HOMEG.remove(HG);HG=new T.Group();FW=new T.Group();RF=new T.Group();WIN=[];FANS=[];HG.add(FW,RF);HOMEG.add(HG);
  const th=[0xf2e4b8,0xff8f5a,0x3cc6d9,0xe8337f,0x9b6bd8][s.theme%5],wc=n<2?0xe9c978:n>=5?th:0xc58a54,rc=n<3?0x58c24a:n>=13?0x7a3b1f:0xd63a31;
  bx(13,.2,9,n>=1?0xd9c9a0:0xb89560,0,.1,0,HG);bx(4,.06,8.4,0xf4f1ea,-4,.23,0,HG);bx(4,.06,8.4,0xc48a52,0,.23,0,HG);bx(4,.06,8.4,0xd9a066,4,.23,0,HG);
  bx(12.5,2.8,.25,wc,0,1.6,-4.06,HG);bx(.25,2.8,8.3,wc,-6.1,1.6,0,HG);bx(.25,2.8,8.3,wc,6.1,1.6,0,HG);
@@ -149,8 +151,8 @@ function house(n){if(HG)SC.remove(HG);HG=new T.Group();FW=new T.Group();RF=new T
  if(has('guard')){bx(1.4,2,1.4,0x3d7a8c,9,1,8,HG);bx(1.8,.2,1.8,0x2b4f9e,9,2.1,8,HG)}if(has('driver')){bx(2.6,1.1,1.3,0xf5f5f5,-10,.75,8,HG);bx(1.2,.7,1.2,0x9fe3f5,-9.6,1.6,8,HG)}
  if(has('gardener'))for(let i=0;i<10;i++)sp(.2,[0xff5a4d,0xffc233,0xe8337f][i%3],i%2?1.8:-1.8,.25,5+i*1.1,HG);
  if(s.proj){[[-6.6,-4.6],[6.6,-4.6],[-6.6,4.6],[6.6,4.6]].forEach(p=>bx(.2,4,.2,0xb5651d,p[0],2,p[1],HG));bx(13.4,.15,.15,0xb5651d,0,3.6,4.6,HG)}}
-const NPC=(col,hat)=>{const g=new T.Group(),lg=x=>{const m=new T.Mesh(new T.BoxGeometry(.16,.55,.2).translate(0,-.275,0),M(0x33415a));m.position.set(x,.58,0);g.add(m);return m};
- const b=new T.Mesh(new T.CylinderGeometry(.28,.34,.8,10),M(col));b.position.y=.98;g.add(b);sp(.26,0xf2c9a0,0,1.62,0,g);bx(.5,.14,.5,hat||0x3b2a1a,0,1.86,0,g);g.userData={L:lg(-.12),R:lg(.12)};SC.add(g);return g};
+const NPC=(col,hat,par)=>{const g=new T.Group(),lg=x=>{const m=new T.Mesh(new T.BoxGeometry(.16,.55,.2).translate(0,-.275,0),M(0x33415a));m.position.set(x,.58,0);g.add(m);return m};
+ const b=new T.Mesh(new T.CylinderGeometry(.28,.34,.8,10),M(col));b.position.y=.98;g.add(b);sp(.26,0xf2c9a0,0,1.62,0,g);bx(.5,.14,.5,hat||0x3b2a1a,0,1.86,0,g);g.userData={L:lg(-.12),R:lg(.12)};(par||HOMEG).add(g);return g};
 const V3=new T.Vector3(),TGL=$('lab');
 function tg(o,html,x,y,z){let t=o.tg;if(!t){t=o.tg={el:document.createElement('div'),h:null};t.el.className='t';TGL.appendChild(t.el)}if(t.h!==html){t.h=html;t.el.innerHTML=html}
  V3.set(x,y,z).project(CAM);const v=html&&V3.z<1;t.el.style.display=v?'block':'none';if(v){t.el.style.left=(V3.x*.5+.5)*innerWidth+'px';t.el.style.top=(-V3.y*.5+.5)*innerHeight+'px'}}
@@ -192,7 +194,7 @@ function target(){let best=null,bd=99;const near=(x,z,r,o)=>{const d=Math.hypot(
   if(h.kit>0&&s.due[f.id]&&!s.bad[f.id])near(f.x,f.z,1.9,{l:'🛠️ Service '+f.n,f:()=>{h.kit--;s.due[f.id]=false;s.wear[f.id]=0;pop(AV.x,AV.z,'✔ serviced');sfx();save()}})});
  return best}
 /* ---------- staff ---------- */
-function syncStaff(){W=W.filter(w=>{if(s.staff.includes(w.role))return true;SC.remove(w.g);tgx(w);return false});
+function syncStaff(){W=W.filter(w=>{if(s.staff.includes(w.role))return true;HOMEG.remove(w.g);tgx(w);return false});
  s.staff.forEach(r=>{if(!W.some(w=>w.role==r)){const h=HOMES[r];W.push({role:r,x:h[0],z:h[1],ry:0,ph:0,path:[],job:null,carry:null,g:NPC(COLS[r])})}});house(s.done)}
 const FC={};
 function wfind(w){const r=w.role;
@@ -235,13 +237,19 @@ function serveTap(id){const c=C.find(o=>o.id==id);if(!c||c.st!='stay')return;con
  s.hand[q.k]--;serve(c,q);save()}
 $('lab').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b)serveTap(+b.dataset.c)});
 function update(dt){
- if(vis){visT+=dt;const a=visT*.25;CAM.position.set(Math.sin(a)*22,13,Math.cos(a)*22);CAM.lookAt(0,1,0);light();return}
+ if(vis){visT+=dt;const a=visT*.25;CAM.position.set(Math.sin(a)*22,13,Math.cos(a)*22);CAM.lookAt(0,1,0);light();hostStep(dt);othersStep(dt);return}
  clk+=dt;if(clk>=60){clk-=60;dawn()}light();const night=clk>=30;
+ if(boostT>0)boostT-=dt;
+ if(mode=='town'){townFrame(dt);othersStep(dt);incStep(dt);$('cash').textContent=fmt(s.cash);$('rep').textContent=s.rep.toFixed(1);$('clk').textContent=(night?'🌙 Night':'☀️ Day')+' '+s.day+' · '+Math.ceil(night?60-clk:30-clk)+'s';
+  if(TK){TK.t+=dt;if(TK.t>=TK.T)finishTask()}
+  sv+=dt;if(sv>=4){sv=0;save()}
+  PP.forEach(p=>{p.life-=dt;tg(p,'<span style="font-size:18px">'+p.t+'</span>',p.x,2.6+(1.6-p.life)*.9,p.z)});PP.filter(p=>p.life<=0).forEach(tgx);PP=PP.filter(p=>p.life>0);
+  return}
  let vx=jx+(K.ArrowRight||K.d?1:0)-(K.ArrowLeft||K.a?1:0),vz=jz+(K.ArrowDown||K.s?1:0)-(K.ArrowUp||K.w?1:0);const m=Math.hypot(vx,vz);if(m>1){vx/=m;vz/=m}
  AV.mv=false;if(m>.1&&!MD){const nx=AV.x+vx*5.5*dt,nz=AV.z+vz*5.5*dt;if(!hit(nx,AV.z))AV.x=nx;if(!hit(AV.x,nz))AV.z=nz;AV.x=clamp(AV.x,-42,42);AV.z=clamp(AV.z,-42,42);AV.ry=Math.atan2(vx,vz);AV.mv=true}
- acc+=dt;if(acc>=(night?2:1)*Math.max(1.5,5-cap()*.3)){acc=0;arrive()}bt+=dt;if(bt>=8){bt=0;breakdowns()}sv+=dt;if(sv>=4){sv=0;save()}
+ acc+=dt;if(acc>=(night?2:1)*Math.max(1.5,5-cap()*.3)){acc=0;arrive()}bt+=dt;if(bt>=8){bt=0;breakdowns()}sv+=dt;if(sv>=4){sv=0;save()}incStep(dt);othersStep(dt);
  if(s.proj){s.proj.t-=dt;if(s.proj.t<=0){s.done++;s.proj=null;house(s.done);toast('Level '+s.done+' complete: '+STAGE(s.done)+'!');sfx();save()}}
- C.forEach(c=>cupdate(c,dt));C.filter(c=>c.dead).forEach(c=>{SC.remove(c.g);tgx(c)});C=C.filter(c=>!c.dead);W.forEach(w=>wupdate(w,dt));
+ C.forEach(c=>cupdate(c,dt));C.filter(c=>c.dead).forEach(c=>{HOMEG.remove(c.g);tgx(c)});C=C.filter(c=>!c.dead);W.forEach(w=>wupdate(w,dt));
  const ins=inside(AV.x,AV.z);FW.visible=RF.visible=!ins;
  let op=0;[AV,...C,...W].forEach(e=>{if(Math.hypot(e.x,e.z-4)<2.6)op=1});DOOR.rotation.y+=((op?-1.6:0)-DOOR.rotation.y)*Math.min(1,dt*6);
  [...FANS,...FANL].forEach(o=>{if(!s.bad[o.fid])o.g.rotation.y+=dt*8});
@@ -265,10 +273,10 @@ function resize(){R.setSize(innerWidth,innerHeight);CAM.aspect=innerWidth/innerH
 let last=performance.now();function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;try{update(dt)}catch(e){console.error(e)}R.render(SC,CAM);requestAnimationFrame(loop)}
 /* ---------- lots, buildings, vehicles (3D) ---------- */
 const rf=(cx,cy,cz,w,d,rh,c)=>{const a=Math.atan2(rh,d/2),L=Math.hypot(d/2,rh)+.4;bx(w,.15,L,c,cx,cy,cz+d/4,LG).rotation.x=a;bx(w,.15,L,c,cx,cy,cz-d/4,LG).rotation.x=-a};
-function car(v,x,z){const g=new T.Group();g.position.set(x,0,z);LG.add(g);bx(v.w,v.h,v.l,v.col,0,v.h/2+.4,0,g);if(v.wh!=2)bx(v.w*.92,v.h*.55,v.l*.45,0x9fe3f5,0,v.h+.65,-v.l*.08,g);else bx(.6,.08,.08,0x222222,0,v.h+.5,.5,g);
+function car(v,x,z,par){const g=new T.Group();g.position.set(x,0,z);(par||LG).add(g);bx(v.w,v.h,v.l,v.col,0,v.h/2+.4,0,g);if(v.wh!=2)bx(v.w*.92,v.h*.55,v.l*.45,0x9fe3f5,0,v.h+.65,-v.l*.08,g);else bx(.6,.08,.08,0x222222,0,v.h+.5,.5,g);
  if(v.stripe)bx(v.w+.02,.15,v.l,0xffffff,0,v.h*.6+.4,0,g);
  const wp=v.wh==2?[[0,v.l*.35],[0,-v.l*.35]]:v.wh==3?[[0,v.l*.38],[-v.w/2,-v.l*.3],[v.w/2,-v.l*.3]]:[[-v.w/2,v.l*.3],[v.w/2,v.l*.3],[-v.w/2,-v.l*.3],[v.w/2,-v.l*.3]];
- wp.forEach(p=>{const w=new T.Mesh(new T.CylinderGeometry(.35,.35,.28,10),M(0x1a1a1a));w.rotation.z=Math.PI/2;w.position.set(p[0],.35,p[1]);g.add(w)})}
+ wp.forEach(p=>{const w=new T.Mesh(new T.CylinderGeometry(.35,.35,.28,10),M(0x1a1a1a));w.rotation.z=Math.PI/2;w.position.set(p[0],.35,p[1]);g.add(w)});return g}
 function bld(id,cx,cz,k){const L=LG;
  if(id=='cottage'){bx(5,.2,5,0xd9c9a0,cx,.1,cz,L);bx(5,2.4,.2,0xc58a54,cx,1.4,cz-2.4,L);bx(.2,2.4,5,0xc58a54,cx-2.4,1.4,cz,L);bx(.2,2.4,5,0xc58a54,cx+2.4,1.4,cz,L);[-2.4,2.4].forEach(x=>bx(.3,2.4,.3,0x8a5a2b,cx+x,1.4,cz+2.4,L));rf(cx,3.1,cz,6,5.2,1.1,0xd63a31);
   bx(1.2,.4,1.9,0x8a5a2b,cx-1.2,.45,cz-.4,L);bx(1.1,.25,1.8,s.items.includes('mattress')?0xffd27a:0xf2f2f2,cx-1.2,.75,cz-.4,L);bx(.5,.12,.5,0xffffff,cx-1.2,.95,cz-1.1,L);
@@ -278,7 +286,7 @@ function bld(id,cx,cz,k){const L=LG;
  else if(id=='spa'){bx(5,2.6,4,0xf7d6e0,cx,1.5,cz-.5,L);bx(5.6,.25,4.6,0xe8337f,cx,3,cz-.5,L);bx(1,1.8,.1,0x6b4423,cx,1.1,cz+1.55,L);[-2.6,2.6].forEach(x=>{bx(.5,.4,.5,0xb5651d,cx+x,.45,cz+2,L);sp(.45,0x2fa84f,cx+x,1,cz+2,L)})}
  else if(id=='garage'){bx(11,.12,9,0x9aa0a6,cx,.06,cz,L);[[-5.2,-4.2],[5.2,-4.2],[-5.2,4.2],[5.2,4.2]].forEach(p=>cy(.15,3.2,0x555555,cx+p[0],1.6,cz+p[1],L));bx(11.5,.2,9.5,0x2b4f9e,cx,3.3,cz,L)}
  else if(id=='pavilion'){bx(9,.25,7,0xe8d3a4,cx,.12,cz,L);[[-4,-3],[4,-3],[-4,3],[4,3],[0,-3],[0,3]].forEach(p=>cy(.25,3.4,0xffffff,cx+p[0],1.8,cz+p[1],L));rf(cx,3.9,cz,10,7.4,1.4,0xffc233);for(let i=0;i<3;i++)[-2.5,2.5].forEach(x=>bx(.8,.5,.8,[0xe8337f,0x3cc6d9,0xffc233][i],cx+x,.5,cz-2+i*2,L))}}
-function lotsRender(){if(LG)SC.remove(LG);LG=new T.Group();SC.add(LG);FANL=[];
+function lotsRender(){if(LG)HOMEG.remove(LG);LG=new T.Group();HOMEG.add(LG);FANL=[];
  LK.forEach(k=>{const L=s.lots[k],[cx,cz]=LC(k);if(!L){if(adj(k)){const m=new T.Mesh(new T.BoxGeometry(15,.05,15),new T.MeshBasicMaterial({color:0xffd54a,transparent:true,opacity:.35}));m.position.set(cx,.04,cz);LG.add(m)}}else if(L.b&&L.b!='main'&&L.b!='yard')bld(L.b,cx,cz,k)});
  const sl=parkSlots();s.veh.forEach((id,i)=>{if(sl[i])car(VEH.find(v=>v.id==id),sl[i][0],sl[i][1])});LG.visible=!vis}
 function pgLot(k){const L=s.lots[k];let h=head('🏞️ Lot '+k);
@@ -287,10 +295,26 @@ function pgLot(k){const L=s.lots[k];let h=head('🏞️ Lot '+k);
  else{const b=BLD.find(x=>x.id==L.b);h+=b?`<p><b>${b.e} ${b.n}</b></p><p class="note">${b.d}</p>`:'<p class="note">Your main property.</p>'}return h}
 function buyLot(k){const p=lotPrice();if(s.lots[k]||s.cash<p)return toast('Not enough cash');s.cash-=p;s.lots[k]={b:null};lotsRender();sfx();save();closeM();toast('Lot purchased! Tap ➕ BUILD to develop it.')}
 function buildOn(k,id){const b=BLD.find(x=>x.id==id),L=s.lots[k];if(!L||L.b||s.done<b.lv||s.cash<b.p)return toast('Cannot build that yet');s.cash-=b.p;L.b=id;lotsRender();sfx();save();closeM();toast(b.n+' built!')}
+const TOUR=[
+ {t:'Welcome to Harong! 🏡',b:'You own a small house in Bicol. Turn it into a resort, welcome guests, and explore the whole town. This quick tour covers the basics.'},
+ {t:'Move around',b:'Use the joystick on the bottom-left (or WASD / arrow keys on a computer) to walk. A button appears on the bottom-right whenever you can do something, like Welcome, Serve, or Enter a building.'},
+ {t:'Guests arrive',b:'Guests wait outside and ask to check in. Tap them, and your avatar walks them to a room. While they stay, they ask for food, drinks, bedding or towels.'},
+ {t:'Kitchen & Storage',b:'Tap the KITCHEN or STORAGE label inside the house to take an item into your hand. Then walk to the guest and tap their request bubble to serve it. No item at hand means the request stays unserved.'},
+ {t:'Renovate & Shop',b:'🔨 Renovate upgrades your house through 20 levels, from small house to a grand resort. 🛒 Shop sells food, materials, appliances, furniture, vehicles and services.'},
+ {t:'Staff',b:'👥 Staff lets you hire a cook, housekeeper, receptionist, maintenance worker and more. They work automatically for a daily wage.'},
+ {t:'Dashboard & rank',b:'📊 Dashboard shows your star rating, earnings and reviews. 🏆 Rank shows three leaderboards: Top Earners, 5-Star Awards and Biggest Assets. From there you can also send gifts or share house management.'},
+ {t:'The town map',b:'🗺️ Map lets you travel to town: a city with mountains, a beach, a forest and a farm. Buy a vehicle to travel faster, and visit other online players there or at their house.'},
+ {t:'Town buildings',b:'In town, walk or drive up to the Police, Hospital, Fire Station, Grocery, Gym, Hardware Store or Farm Market and tap their sign to enter and do activities.'},
+ {t:'Emergencies 🚨',b:'Fires, robberies and injuries can happen at random. Tap the red SOS button and call the right service in time, or you will lose cash and reputation.'}];
+let tourI=0;
+function pgTour(){const t=TOUR[tourI];return head(t.t)+`<p class="note">${t.b}</p><div class="gs" style="justify-content:space-between"><button class="mini" onclick="skipTour()">Skip</button><b>${tourI+1}/${TOUR.length}</b><button class="go alt" style="width:auto;margin:0" onclick="nextTour()">${tourI<TOUR.length-1?'Next':'Start playing!'}</button></div>`}
+pgTour.live=0;
+function nextTour(){tourI++;if(tourI>=TOUR.length)return skipTour();pg()}
+function skipTour(){s.tour=1;save();closeM()}
 /* ---------- menus ---------- */
 let PG=null,SHC='Food & Supplies';
 const chip=(t,on,fn)=>`<button class="chip ${on?'sel':''}" onclick="${fn}">${t}</button>`,head=t=>`<h2>${t}<button class="mini" onclick="closeM()">Close</button></h2>`;
-function openM(p){PG=p;MD=true;$('md').classList.add('open');pg()}function closeM(){PG=null;MD=false;$('md').classList.remove('open')}function pg(){if(PG)$('mc').innerHTML=PG()}
+function openM(p){PG=p;MD=true;$('md').classList.add('open');pg();if(PG.after)PG.after()}function closeM(){PG=null;MD=false;$('md').classList.remove('open')}function pg(){if(PG)$('mc').innerHTML=PG()}
 function pgReno(){const n=s.done,P=PH[n];let h=head('🔨 Renovation')+`<p class="note">Level <b>${n}/20</b> · ${STAGE(n)} · ₱${fmt(rate())} per night · ${cap()} room(s) · ${Object.keys(s.lots).length-2} extra lot(s)</p>`;
  if(s.proj)h+=`<p><b>Building: ${PH[s.proj.i].n}</b> ${Math.round(100*(1-s.proj.t/s.proj.T))}%</p>`;
  else if(!P)h+='<p><b>Maximum level!</b> Your Grand Resort is complete. Keep buying lots and vehicles.</p>';
@@ -307,21 +331,42 @@ function pgStaff(){const tot=s.staff.reduce((a,r)=>a+ROLES.find(x=>x.r==r).w,0);
  ROLES.forEach(o=>{const on=has(o.r);h+=`<div class="rw"><span>${o.e} ${o.n}<small>${o.d}</small></span><span class="pr">₱${o.w}/day</span><button class="mini ${on?'red':''}" onclick="${on?'fire':'hire'}('${o.r}')">${on?'Fire':'Hire'}</button></div>`});return h}
 function pgDash(){const n=s.revs.length,cnt=[1,2,3,4,5].map(k=>s.revs.filter(r=>r.s==k).length);let h=head('📊 Dashboard')+`<div class="gs"><span>⭐ <b>${s.rep.toFixed(2)}</b> / 5</span><span>${s.rn} reviews</span><span>Earned ₱${fmt(s.earn)}</span><span>Level ${s.done}/20</span><span>Day ${s.day}</span></div>`;
  h+=[5,4,3,2,1].map(k=>`<div class="rw"><span>${'⭐'.repeat(k)}</span><div class="bar2"><i style="width:${n?100*cnt[k-1]/n:0}%"></i></div><b>${cnt[k-1]}</b></div>`).join('');
- h+=`<p class="note">Ranking uses your cash and your star rating. <button class="mini" onclick="closeM();$('lb').click()">🏆 Open leaderboard</button></p><h3>Recent reviews</h3>`;
+ h+=`<p class="note"><button class="mini" onclick="closeM();$('lb').click()">🏆 Open leaderboard</button> <button class="mini" onclick="openM(pgGift)">🎁 Send a gift</button> <button class="mini" onclick="openM(pgOwn)">🤝 Ownership</button></p><h3>Recent reviews</h3>`;
  h+=n?s.revs.slice(0,8).map(r=>`<div class="rw"><span>${'⭐'.repeat(r.s)} <b>${r.n}</b><small>${r.t} (day ${r.d})</small></span></div>`).join(''):'<p class="note">No reviews yet. Welcome your first guest!</p>';return h}
-const handHtml=()=>`<div class="gs">✋ At hand: <b>${handStr()||'nothing'}</b></div>`;
-function pgStock(title,keys,fr){let h=head(title);if(fr&&s.bad.fridge)h+='<p class="warn">⚠ The fridge is broken. Repair it to take food.</p>';h+=handHtml()+'<p class="note">Tap an item to take it. Then walk to the guest and tap their request bubble.</p>';
- keys.forEach(k=>{const it=SH.find(x=>x.id==k),n=s.inv[k]||0,rq=C.reduce((a,c)=>a+(c.st=='stay'?c.rq.filter(q=>q.st=='act'&&q.k==k).length:0),0),off=n<1||(fr&&s.bad.fridge);
-  h+=`<div class="rw" ${off?'':`onclick="takeItem('${k}')" style="cursor:pointer"`}><span>${it.e} ${it.n}<small>In stock: ${n}${rq?' · <b style="color:#b3123d">Requested now: '+rq+'</b>':''}</small></span><button class="mini" ${off?'disabled':''}>Take</button></div>`});
- return h+'<button class="go alt" onclick="closeM()">Done</button>'}
-function pgInv(){const it=k=>SH.find(x=>x.id==k),hd=Object.entries(s.hand).filter(e=>e[1]>0);let h=head('🎒 Inventory')+'<h3>✋ At hand</h3>';
- h+=hd.length?hd.map(([k,n])=>`<div class="rw"><span>${it(k).e} ${it(k).n}</span><b>×${n}</b><button class="mini" onclick="putBack('${k}')">Put back</button></div>`).join(''):'<p class="note">Nothing in hand. Tap the KITCHEN or STORAGE label in the house to take items.</p>';
- const sec=(t,ks)=>`<h3>${t}</h3>`+ks.map(k=>`<div class="rw"><span>${it(k).e} ${it(k).n}</span><b>×${s.inv[k]||0}</b></div>`).join('');
- h+=sec('🍳 Kitchen',['meal','drink'])+sec('📦 Storage',['linen','towel','kit','part']);
- const mt=Object.keys(s.mat).filter(k=>s.mat[k]>0);h+='<h3>🧱 Renovation materials</h3>'+(mt.length?mt.map(k=>`<div class="rw"><span>${MT[k].e} ${MT[k].n}</span><b>×${s.mat[k]}</b></div>`).join(''):'<p class="note">None. Buy materials in the Shop.</p>');
- h+='<h3>🛋️ Furniture and appliances</h3>'+(s.items.length?s.items.map(k=>`<div class="rw"><span>${it(k).e} ${it(k).n}</span><b>Owned ✔</b></div>`).join(''):'<p class="note">None yet.</p>');
- h+='<h3>🚗 Vehicles</h3>'+(s.veh.length?s.veh.map(id=>{const v=VEH.find(x=>x.id==id);return`<div class="rw"><span>${v.e} ${v.n}</span><b>+${Math.round(v.arr*100)}% guests</b></div>`}).join(''):'<p class="note">No vehicles yet. Buy some in the Shop (parking: '+parkSlots().length+' slots).</p>')+'<h3>🏞️ Property</h3><p class="note">'+(Object.keys(s.lots).length-2)+' extra lot(s), '+Object.values(s.lots).filter(l=>l.b&&l.b!='main'&&l.b!='yard').length+' building(s).</p>'+'<h3>👥 Staff</h3>'+(s.staff.length?s.staff.map(r=>{const o=ROLES.find(x=>x.r==r);return`<div class="rw"><span>${o.e} ${o.n}</span><b>₱${o.w}/day</b></div>`}).join(''):'<p class="note">No staff hired.</p>');
- return h+`<p class="note">Cash: <b>₱${fmt(s.cash)}</b></p>`}
+function pgGift(){let h=head('🎁 Send a Gift')+'<p class="note">Pick an online player, then pick what to send.</p>';
+ const on=OTHERS.filter(o=>Date.now()-o.t<60000&&o.uid!=myUid);
+ h+=on.length?on.map(o=>`<div class="rw"><span>🟢 ${o.name}</span><button class="mini" onclick="openM(()=>pgGiftTo('${o.uid}','${String(o.name).replace(/[^\p{L}\p{N} ._-]/gu,'')}'))">Gift</button></div>`).join(''):'<p class="note">Nobody else is online right now. Try again later.</p>';
+ h+='<h3>📬 Gifts received</h3>'+(GIFTS.length?GIFTS.map((gf,i)=>`<div class="rw"><span>${gf.e||'🎁'} ${gf.label} <small>from ${gf.from}</small></span><button class="mini" onclick="claimGift(${i})">Claim</button></div>`).join(''):'<p class="note">No gifts waiting.</p>');return h}
+pgGift.live=1;
+function pgGiftTo(uid,name){let h=head('🎁 Gift to '+name);
+ const opts=[['meal',s.inv.meal],['drink',s.inv.drink],['linen',s.inv.linen],['towel',s.inv.towel],['kit',s.inv.kit],['part',s.inv.part]];
+ h+='<h3>Supplies</h3>'+opts.map(([k,n])=>`<div class="rw"><span>${SH.find(x=>x.id==k).e} ${SH.find(x=>x.id==k).n}<small>you have ${n}</small></span><button class="mini" ${n<1?'disabled':''} onclick="sendGift('${uid}','${name}','inv','${k}',1)">Send 1</button></div>`).join('');
+ h+='<h3>Materials</h3>'+Object.keys(s.mat).filter(k=>s.mat[k]>0).map(k=>`<div class="rw"><span>${MT[k].e} ${MT[k].n}<small>you have ${s.mat[k]}</small></span><button class="mini" onclick="sendGift('${uid}','${name}','mat','${k}',1)">Send 1</button></div>`).join('')||'<p class="note">No spare materials.</p>';
+ h+='<h3>Vehicle</h3>'+(s.veh.length?s.veh.map((id,i)=>`<div class="rw"><span>${VEH.find(v=>v.id==id).e} ${VEH.find(v=>v.id==id).n}</span><button class="mini" onclick="sendGift('${uid}','${name}','veh','${id}',1,${i})">Give</button></div>`).join(''):'<p class="note">No vehicles to give.</p>');
+ return h+'<button class="go alt" onclick="openM(pgGift)">Back</button>'}
+function sendGift(uid,name,t,k,q,vi){if(t=='inv'&&s.inv[k]<q)return toast('Not enough');if(t=='mat'&&s.mat[k]<q)return toast('Not enough');
+ if(t=='inv')s.inv[k]-=q;if(t=='mat')s.mat[k]-=q;if(t=='veh')s.veh.splice(vi,1);
+ const nm=t=='veh'?VEH.find(v=>v.id==k):t=='mat'?MT[k]:SH.find(x=>x.id==k);
+ if(window.sendGiftCloud)window.sendGiftCloud(uid,{e:nm.e,label:nm.n+(q>1?' ×'+q:''),t,k,q,from:(window.myName||'A player')});
+ lotsRender();toast('Gift sent to '+name+'!');save();pg()}
+function claimGift(i){const gf=GIFTS[i];
+ if(gf.t=='house'){if(!confirm('Accept this harong and everything in it? Your current progress will be replaced.'))return;
+  try{Object.assign(s,norm(JSON.parse(gf.state)))}catch(e){}house(s.done);syncStaff();lotsRender();toast('You now own this harong!')}
+ else{if(gf.t=='inv')s.inv[gf.k]=(s.inv[gf.k]|0)+gf.q;if(gf.t=='mat')s.mat[gf.k]=(s.mat[gf.k]|0)+gf.q;if(gf.t=='veh')s.veh.push(gf.k);lotsRender();toast('Gift claimed: '+gf.label)}
+ GIFTS.splice(i,1);if(window.ackGift)window.ackGift(i);sfx();save();pg()}
+function pgOwn(){let h=head('🤝 Ownership')+`<p class="note">Your harong is owned by <b>${s.coowners.length?', co-managed with '+s.coowners.map(o=>o.name).join(', '):'only you'}</b>.</p>`;
+ h+='<h3>Co-manage with a friend</h3>';const on=OTHERS.filter(o=>Date.now()-o.t<60000&&o.uid!=myUid&&!s.coowners.some(c=>c.uid==o.uid));
+ h+=on.length?on.map(o=>`<div class="rw"><span>🟢 ${o.name}</span><button class="mini" onclick="addCoowner('${o.uid}','${String(o.name).replace(/[^\p{L}\p{N} ._-]/gu,'')}')">Add</button></div>`).join(''):'<p class="note">No one else online to invite.</p>';
+ h+=s.coowners.length?'<h3>Current co-owners</h3>'+s.coowners.map((c,i)=>`<div class="rw"><span>${c.name}</span><button class="mini red" onclick="remCoowner(${i})">Remove</button></div>`).join(''):'';
+ h+='<h3>Transfer ownership</h3><p class="note">⚠ This gives your entire harong, cash and everything in it to another player. You start over with a fresh small house. This cannot be undone.</p>';
+ h+=on.length?on.map(o=>`<div class="rw"><span>🟢 ${o.name}</span><button class="mini red" onclick="transferConfirm('${o.uid}','${String(o.name).replace(/[^\p{L}\p{N} ._-]/gu,'')}')">Transfer</button></div>`).join(''):'';
+ return h}
+pgOwn.live=1;
+function addCoowner(uid,name){s.coowners.push({uid,name});toast(name+' can now help manage your harong');save();pg()}
+function remCoowner(i){s.coowners.splice(i,1);save();pg()}
+function transferConfirm(uid,name){if(!confirm('Give your entire harong to '+name+'? You cannot undo this.'))return;
+ if(window.sendGiftCloud)window.sendGiftCloud(uid,{e:'🏠',label:'A fully-grown harong (Level '+s.done+')',t:'house',state:JSON.stringify(s),from:window.myName||'A player'});
+ const fresh=D0();fresh.ts=Date.now();Object.assign(s,fresh);house(0);lotsRender();syncStaff();save();closeM();toast('Ownership transferred. You start fresh!')}
 function setCrew(k){s.crew=k;pg()}function setTheme(i){s.theme=i;house(s.done);save();pg()}
 function buyMissing(){const P=PH[s.done];let c=0;for(const k in P.m)c+=Math.max(0,P.m[k]-(s.mat[k]||0))*MT[k].p;if(s.cash<c)return toast('Not enough cash for the materials');s.cash-=c;for(const k in P.m)s.mat[k]=Math.max(s.mat[k]||0,P.m[k]);sfx();save();pg()}
 function startProj(){const P=PH[s.done],cc=crewCost(s.done,s.crew);for(const k in P.m)if((s.mat[k]||0)<P.m[k])return;if(s.cash<cc.l+cc.m)return toast('Not enough cash for the crew');
@@ -334,12 +379,125 @@ function buy(id,q){const it=SH.find(x=>x.id==id),cost=it.p*q;if(it.t=='own'&&s.i
  sfx();save();pg()}
 function hire(r){const o=ROLES.find(x=>x.r==r);if(s.cash<o.w)return toast('Need ₱'+o.w+' for the first day wage');s.cash-=o.w;s.staff.push(r);syncStaff();toast(o.n+' hired');save();pg()}
 function fire(r){s.staff=s.staff.filter(x=>x!=r);syncStaff();save();pg()}
-$('bR').onclick=()=>openM(pgReno);$('bS').onclick=()=>openM(pgShop);$('bI').onclick=()=>openM(pgInv);$('bT').onclick=()=>openM(pgStaff);$('bD').onclick=()=>openM(pgDash);
-pgStaff.live=pgDash.live=1;setInterval(()=>{if(PG&&PG.live)pg()},2000);
+$('bR').onclick=()=>openM(pgReno);$('bS').onclick=()=>openM(pgShop);$('bI').onclick=()=>openM(pgInv);$('bT').onclick=()=>openM(pgStaff);$('bD').onclick=()=>openM(pgDash);$('bM').onclick=()=>openM(pgMap);$('sos').onclick=()=>openM(pgSos);
+pgStaff.live=pgDash.live=1;setInterval(()=>{if(PG&&PG.live){pg();if(PG.after)PG.after()}},2000);
+/* ---------- town, map, travel ---------- */
+let mode='home',AVV=null,boostT=0,HM=null,VW=null,VH=null,OTHERS=[],myUid=null,GIFTS=[],INC=null,incT=rnd(55,90),RV=null,THF=null,TK=null,CUR=null,mmT=0,visitors=0;
+const ET={},THM={},GT={},OT=new Map(),ITAG={},REG=[{h:'⛰️ MT. MAYON',x:-50,y:24,z:-85},{h:'🏖️ BEACH',x:68,y:6,z:0},{h:'🌊 SEA',x:105,y:4,z:0},{h:'🌲 FOREST',x:-72,y:9,z:0},{h:'🌾 FARM',x:6,y:7,z:-70},{h:'🏘️ RESIDENTIAL',x:5,y:7,z:56}];
+const ESTS=[{id:'police',n:'Police Station',e:'👮',x:-20,z:-16,col:0x2b4f9e,d:'Keep the barangay safe.'},{id:'hospital',n:'Hospital',e:'🏥',x:20,z:-16,col:0xf5f5f5,d:'Care for the sick and injured.'},{id:'fire',n:'Fire Station',e:'🚒',x:-20,z:18,col:0xd63a31,d:'Fire fighters and fire safety.'},{id:'grocery',n:'Grocery',e:'🛒',x:20,z:18,col:0xf08a1c,d:'Food and supplies at 15% off.'},{id:'gym',n:'Gym',e:'🏋️',x:14,z:-34,col:0x9b6bd8,d:'Get stronger and faster.'},{id:'hardware',n:'Hardware Store',e:'🧱',x:-14,z:34,col:0x8a5a2b,d:'Renovation materials at 10% off.'},{id:'farm',n:'Farm Market',e:'🌾',x:-8,z:-56,col:0xb5321e,d:'Fresh produce straight from the farm.'}];
+const SV={police:{e:'🚓',n:'Police',col:0x2b4f9e,w:1.7,l:3.4,h:.9},hospital:{e:'🚑',n:'Hospital (ambulance)',col:0xffffff,w:1.9,l:4,h:1.4},fire:{e:'🚒',n:'Fire Fighters',col:0xd63a31,w:2,l:5,h:1.5}};
+const IT={fire:{e:'🔥',n:'Fire at the house!',svc:'fire',lim:22},thief:{e:'🦹',n:'Robbery in progress!',svc:'police',lim:20},injury:{e:'🤕',n:'Someone was injured!',svc:'hospital',lim:25}};
+const TASKS={police:[{k:'patrol',n:'Patrol shift',T:10,cash:350}],hospital:[{k:'nurse',n:'Volunteer nurse shift',T:10,cash:350}],fire:[{k:'drill',n:'Fire drill volunteer',T:10,cash:350}],grocery:[{k:'stock',n:'Stock the shelves',T:8,cash:300}],gym:[{k:'work',n:'Workout (speed boost 90s)',T:8,cost:150,boost:90}],hardware:[{k:'load',n:'Load lumber',T:8,cash:400}],farm:[{k:'harv',n:'Harvest vegetables (free meals)',T:10,inv:{meal:3}}]};
+const SPEED={moto:11,trike:8,multicab:10,sedan:13,jeep:8,suv:12,van:11,bus:8};
+let sd=7;const rn=()=>(sd=(sd*9301+49297)%233280)/233280;
+const tree=(x,z)=>{cy(.25,2,0x6b4423,x,1,z,TWN);const c=new T.Mesh(new T.ConeGeometry(1.3,3,8),M(0x1f7a3a));c.position.set(x,3.2,z);TWN.add(c)};
+const wpalm=(x,z)=>{cy(.2,3,0x8a5a2b,x,1.5,z,TWN);for(let i=0;i<5;i++){const l=bx(1.8,.08,.5,0x2fa84f,x+Math.cos(i*1.3)*.8,3.1,z+Math.sin(i*1.3)*.8,TWN);l.rotation.y=-i*1.3;l.rotation.z=.3}};
+function mini(x,z,col,P){P=P||TWN;bx(5,3,4,col,x,1.7,z,P);const a=Math.atan2(1.2,2.4),L=Math.hypot(1.2,2.4)+.3;bx(6,.15,L,0xd63a31,x,3.9,z+1.1,P).rotation.x=a;bx(6,.15,L,0xd63a31,x,3.9,z-1.1,P).rotation.x=-a;bx(1,1.8,.1,0x6b4423,x,1.1,z+2.06,P)}
+function townHome(){let h=0;const u=myUid||'x';for(const ch of u)h=(h*31+ch.charCodeAt(0))>>>0;return[-45+(h%7)*15,46+((h>>3)%3)*12+8]}
+function buildTown(){bx(220,.2,220,0x58b86a,0,-.1,0,TWN);bx(7,.05,150,0x555a60,0,.04,0,TWN);bx(110,.05,7,0x555a60,0,.04,2,TWN);bx(30,.1,200,0xf2dfa0,70,.03,0,TWN);bx(40,.1,200,0x3cc6d9,105,.04,0,TWN);
+ for(let i=0;i<14;i++)wpalm(58+rn()*20,-80+rn()*160);for(let i=0;i<70;i++)tree(-95+rn()*50,-70+rn()*140);
+ [[-80,-80,18,32],[-50,-88,14,26],[10,-95,20,36],[55,-90,16,28],[-20,-96,12,22]].forEach(([x,z,r,h])=>{const m=new T.Mesh(new T.ConeGeometry(r,h,8),M(0x7a808a));m.position.set(x,h/2,z);TWN.add(m);const c=new T.Mesh(new T.ConeGeometry(r*.35,h*.3,8),M(0xffffff));c.position.set(x,h*.86,z);TWN.add(c)});
+ for(let i=0;i<6;i++)bx(16,.1,11,[0x8bc34a,0xd9c95a,0x6b8e3a][i%3],-30+(i%3)*18,.03,-62-(i/3|0)*13,TWN);
+ bx(9,5,7,0xb5321e,34,2.7,-60,TWN);bx(10,.4,8,0x444444,34,5.4,-60,TWN);cy(2,8,0xcfd8dc,44,4,-60,TWN);
+ [[-30,52],[-15,64],[15,52],[30,64],[45,52]].forEach(p=>mini(p[0],p[1],0xf2e4b8));
+ ESTS.forEach(e=>{bx(11,5,8,e.col,e.x,2.7,e.z,TWN);bx(12,.4,9,0x444444,e.x,5.4,e.z,TWN);bx(2.4,3.2,.2,0x222222,e.x,1.8,e.z+4.05,TWN)})}
+buildTown();
+const curVeh=()=>s.vsel>=0&&s.veh[s.vsel]?VEH.find(v=>v.id==s.veh[s.vsel]):null,townSpeed=()=>(curVeh()?SPEED[curVeh().id]:4.2)*(boostT>0?1.25:1);
+function showVeh(){if(AVV){AVV.parent&&AVV.parent.remove(AVV);AVV=null}const v=curVeh();AV.g.visible=!v;if(v)AVV=car(v,0,0,TWN)}
+const hid=o=>{if(o&&o.tg)o.tg.el.style.display='none'};
+function hideHomeTags(){C.forEach(hid);W.forEach(hid);Object.values(FT).forEach(hid);Object.values(LT).forEach(hid);[PLK,PLS,GT,ITAG].forEach(hid);PP.forEach(hid)}
+function hideTownTags(){Object.values(ET).forEach(hid);hid(THM);REG.forEach(hid)}
+function setMode(m){if(m==mode||vis)return;closeM();mode=m;HOMEG.visible=m=='home';TWN.visible=m=='town';
+ if(m=='town'){const h=townHome();if(HM)TWN.remove(HM);HM=new T.Group();TWN.add(HM);mini(h[0],h[1],0xff8f5a,HM);AV.x=h[0];AV.z=h[1]+7;showVeh();hideHomeTags();toast('Welcome to town! Drive or walk to a building and tap its sign.')}
+ else{AV.x=0;AV.z=12;if(AVV){AVV.parent&&AVV.parent.remove(AVV);AVV=null}AV.g.visible=true;hideTownTags()}
+ $('mm').style.display=m=='town'?'block':'none';CAM.position.set(AV.x,m=='town'?16:12.5,AV.z+(m=='town'?13:10.5));if(window.presenceNow)window.presenceNow()}
+function drawMap(cv){if(!cv||!cv.getContext)return;const x=cv.getContext('2d');if(!x)return;const S=cv.width,P=(a,b)=>[(a+100)/200*S,(b+100)/200*S],Rc=(a,b,w,h,c)=>{const p=P(a,b);x.fillStyle=c;x.fillRect(p[0],p[1],w/200*S,h/200*S)};
+ Rc(-100,-100,200,200,'#58b86a');Rc(-100,-100,70,45,'#8a8f98');Rc(-100,-50,55,120,'#1f7a3a');Rc(-40,-90,90,45,'#d9c95a');Rc(55,-100,30,200,'#f2dfa0');Rc(85,-100,15,200,'#3cc6d9');Rc(-3.5,-75,7,150,'#555a60');Rc(-55,-1.5,110,7,'#555a60');
+ x.font=Math.round(S/13)+'px sans-serif';x.textAlign='center';x.textBaseline='middle';
+ [['⛰️',-70,-75],['🌲',-75,0],['🌾',5,-72],['🏖️',70,0]].forEach(r=>{const p=P(r[1],r[2]);x.fillText(r[0],p[0],p[1])});ESTS.forEach(e=>{const p=P(e.x,e.z);x.fillText(e.e,p[0],p[1])});
+ const h=townHome(),hp=P(h[0],h[1]);x.fillText('🏠',hp[0],hp[1]);
+ OTHERS.forEach(o=>{if(Date.now()-o.t<60000){const t=o.loc=='town',p=t?P(o.x,o.z):hp;x.fillStyle='#e8337f';x.beginPath();x.arc(p[0]+(t?0:6),p[1]+(t?0:6),4,0,7);x.fill()}});
+ const me=mode=='town'?P(AV.x,AV.z):hp;x.fillStyle='#0d3b4c';x.beginPath();x.arc(me[0],me[1],7,0,7);x.fill();x.fillStyle='#ffc233';x.beginPath();x.arc(me[0],me[1],4,0,7);x.fill()}
+function townFrame(dt){const sp=townSpeed(),vx0=jx+(K.ArrowRight||K.d?1:0)-(K.ArrowLeft||K.a?1:0),vz0=jz+(K.ArrowDown||K.s?1:0)-(K.ArrowUp||K.w?1:0),m=Math.hypot(vx0,vz0);AV.mv=false;
+ if(m>.1&&!MD){const k=m>1?1/m:1,vx=vx0*k,vz=vz0*k;AV.x=clamp(AV.x+vx*sp*dt,-95,95);AV.z=clamp(AV.z+vz*sp*dt,-95,95);AV.ry=Math.atan2(vx,vz);AV.mv=!curVeh()}
+ if(AVV){AVV.position.set(AV.x,0,AV.z);AVV.rotation.y=AV.ry}
+ CAM.position.x+=(AV.x-CAM.position.x)*Math.min(1,dt*4);CAM.position.y=16;CAM.position.z+=(AV.z+13-CAM.position.z)*Math.min(1,dt*4);CAM.lookAt(CAM.position.x,0,CAM.position.z-13);
+ let best=null,bd=99;ESTS.forEach(e=>{const d=Math.hypot(AV.x-e.x,AV.z-e.z);if(d<9&&d<bd){bd=d;best={l:e.e+' Enter '+e.n,f:()=>openEst(e.id)}}});const h=townHome(),dh=Math.hypot(AV.x-h[0],AV.z-h[1]);if(dh<9&&dh<bd)best={l:'🏠 Go home',f:()=>setMode('home')};
+ TG0=MD?null:best;const ab=$('act');ab.style.display=TG0?'block':'none';if(TG0&&ab.textContent!==TG0.l)ab.textContent=TG0.l;
+ mmT+=dt;if(mmT>.4){mmT=0;drawMap($('mm'))}
+ tg(AV,'<span style="font-size:13px">You'+(curVeh()?' '+curVeh().e:'')+'</span>',AV.x,2.6,AV.z);
+ ESTS.forEach(e=>placeTag(ET[e.id]||(ET[e.id]={}),'<b class="plb">'+e.e+' '+e.n+'</b>',e.x,7,e.z,()=>openEst(e.id)));
+ placeTag(THM,'<b class="plb">🏠 YOUR HARONG</b>',h[0],6,h[1],()=>{if(Math.hypot(AV.x-h[0],AV.z-h[1])<12)setMode('home');else toast('Drive or walk to your house first')});
+ REG.forEach(r=>tg(r,'<span style="font-size:17px">'+r.h+'</span>',r.x,r.y,r.z))}
+/* ---------- other players (presence) ---------- */
+function othersStep(dt){const now=Date.now(),live=new Set();
+ OTHERS.forEach(o=>{if(now-o.t>60000||vis)return;const it=mode=='town'&&o.loc=='town',am=mode=='home'&&o.loc=='visit:'+myUid;if(!it&&!am)return;live.add(o.uid);let e=OT.get(o.uid);
+  if(!e){e={uid:o.uid,x:am?rnd(-3,3):o.x,z:am?10+rnd(0,3):o.z,ry:0,ph:0,mv:false,g:NPC(0x9b6bd8,0x222222)};(it?TWN:HOMEG).add(e.g);OT.set(o.uid,e)}
+  e.name=o.name;if(it){const dx=o.x-e.x,dz=o.z-e.z,d=Math.hypot(dx,dz);if(d>.1){const v=Math.min(d,7*dt);e.x+=dx/d*v;e.z+=dz/d*v;e.ry=Math.atan2(dx,dz);e.mv=true}else e.mv=false}});
+ OT.forEach((e,k)=>{if(!live.has(k)){e.g.parent&&e.g.parent.remove(e.g);tgx(e);OT.delete(k)}else{place(e,dt);tg(e,'<span>'+(mode=='home'?'👋 ':'')+e.name+'</span>',e.x,2.5,e.z)}})}
+function hostStep(dt){if(!VW||!VH)return;const o=OTHERS.find(o=>o.uid==VW.uid&&Date.now()-o.t<60000),on=o&&o.loc=='home';VH.g.visible=!!on;
+ if(on){const dx=o.x-VH.x,dz=o.z-VH.z,d=Math.hypot(dx,dz);VH.mv=false;if(d>.1){const v=Math.min(d,6*dt);VH.x+=dx/d*v;VH.z+=dz/d*v;VH.ry=Math.atan2(dx,dz);VH.mv=true}place(VH,dt)}
+ tg(VH,'<span>🟢 '+VW.name+(on?'':(o?' (in town)':' (offline)'))+'</span>',on?VH.x:0,on?2.5:3,on?VH.z:12)}
+/* ---------- establishments ---------- */
+function openEst(id){const e=ESTS.find(x=>x.id==id);if(mode!='town'||Math.hypot(AV.x-e.x,AV.z-e.z)>12)return toast('Drive or walk closer to the '+e.n);CUR=id;openM(pgEst)}
+function EB(id){const g=id=='grocery'?[['meal',60],['drink',26],['linen',300],['towel',100],['kit',130]].map(a=>({k:a[0],p:a[1],t:'inv'})):id=='farm'?[{k:'meal',p:45,t:'inv'},{k:'drink',p:20,t:'inv'}]:id=='hardware'?Object.keys(MT).map(k=>({k,p:Math.round(MT[k].p*.9),t:'mat'})):id=='hospital'?[{k:'aid',p:450,t:'inv'}]:id=='fire'?[{k:'ext',p:1000,t:'inv'}]:[];return g}
+function estBuy(k,p,t,q){const c=p*q;if(s.cash<c)return toast('Not enough cash');s.cash-=c;const o=t=='mat'?s.mat:s.inv;o[k]=(o[k]|0)+q;sfx();save();pg()}
+function estSvc(k){const c=k=='insp'?800:500;if(s.cash<c)return toast('Not enough cash');s.cash-=c;if(k=='insp')s.fireDay=s.day+2;else s.safeDay=s.day+1;sfx();toast(k=='insp'?'Fire safety inspection done: no fires for 2 days':'Tanod patrol hired: no robberies today');save();pg()}
+function startTask(id,k){if(TK)return;const t=TASKS[id].find(x=>x.k==k);if(t.cost&&s.cash<t.cost)return toast('Need ₱'+t.cost);if(t.cost)s.cash-=t.cost;TK={id,k,t:0,T:t.T,def:t};pg()}
+function finishTask(){const d=TK.def;let m='';if(d.cash){s.cash+=d.cash;m='+₱'+fmt(d.cash)}if(d.inv)for(const k in d.inv){s.inv[k]=(s.inv[k]|0)+d.inv[k];m+='+'+d.inv[k]+' '+k}if(d.boost){boostT=d.boost;m='Speed boost 90s'}toast('Task done! '+m);sfx();TK=null;save();pg()}
+function pgEst(){const e=ESTS.find(x=>x.id==CUR);let h=head(e.e+' <b>'+e.n.toUpperCase()+'</b>')+'<p class="note">'+e.d+'</p>';
+ EB(e.id).forEach(it=>{const nm=it.t=='mat'?MT[it.k]:SH.find(x=>x.id==it.k),st=(it.t=='mat'?s.mat:s.inv)[it.k]|0;h+=`<div class="rw"><span>${nm.e} ${nm.n}<small>in stock: ${st}</small></span><span class="pr">₱${fmt(it.p)}</span><button class="mini" onclick="estBuy('${it.k}',${it.p},'${it.t}',1)">Buy</button><button class="mini" onclick="estBuy('${it.k}',${it.p},'${it.t}',5)">×5</button></div>`});
+ if(e.id=='fire')h+=`<div class="rw"><span>📋 Fire safety inspection<small>No fires for 2 days ${s.fireDay>=s.day?'(active)':''}</small></span><span class="pr">₱800</span><button class="mini" onclick="estSvc('insp')">Pay</button></div>`;
+ if(e.id=='police')h+=`<div class="rw"><span>🛡️ Hire barangay tanod patrol<small>No robberies today ${s.safeDay>=s.day?'(active)':''}</small></span><span class="pr">₱500</span><button class="mini" onclick="estSvc('tanod')">Pay</button></div>`;
+ h+='<h3>Activities</h3>';(TASKS[e.id]||[]).forEach(t=>{const run=TK&&TK.k==t.k;h+=`<div class="rw"><span>${t.n}<small>${t.cost?'Cost ₱'+t.cost:t.cash?'Earn ₱'+t.cash:'Reward: free items'} · ${t.T}s</small>${run?'<div class="bar2"><i style="width:'+Math.round(100*TK.t/TK.T)+'%"></i></div>':''}</span><button class="mini" ${TK?'disabled':''} onclick="startTask('${e.id}','${t.k}')">${run?'Working…':'Start'}</button></div>`});
+ return h+'<button class="go alt" onclick="closeM()">Leave</button>'}
+pgEst.live=1;
+/* ---------- map page ---------- */
+function pgMap(){let h=head('🗺️ Map')+'<canvas id="mapc" width="320" height="320" style="width:100%;max-width:340px;display:block;margin:0 auto;border-radius:12px"></canvas>';
+ h+=`<p class="note">📍 You are in: <b>${mode=='home'?'your harong':'town'}</b>. 🏠 = your house, pink dots = other players online.</p>`;
+ h+=mode=='home'?'<button class="go" onclick="setMode(\'town\')">🚗 Travel to town</button>':'<button class="go alt" onclick="setMode(\'home\')">🏠 Return home</button>';
+ h+='<h3>Travel by</h3><div class="chips">'+chip('🚶 Walk',s.vsel<0,"pickVeh(-1)")+s.veh.map((id,i)=>{const v=VEH.find(x=>x.id==id);return chip(v.e+' '+v.n,s.vsel==i,`pickVeh(${i})`)}).join('')+'</div><p class="note">Vehicles are faster than walking. Buy them in the Shop.</p>';
+ const on=OTHERS.filter(o=>Date.now()-o.t<60000);h+='<h3>Online now ('+on.length+')</h3>'+(on.length?on.map(o=>`<div class="rw"><span>🟢 ${o.name}<small>${o.loc=='town'?'In town':o.loc.startsWith('visit')?'Visiting someone':'At home'}</small></span><button class="mini" onclick="Harong.visitUid&&Harong.visitUid('${o.uid}','${String(o.name).replace(/[^\p{L}\p{N} ._-]/gu,'')}');closeM()">Visit</button></div>`).join(''):'<p class="note">Nobody else is online right now.</p>');return h}
+pgMap.live=1;pgMap.after=()=>drawMap($('mapc'));
+function pickVeh(i){s.vsel=i;if(mode=='town')showVeh();save();pg()}
+/* ---------- emergencies ---------- */
+const FIREG=new T.Group();HOMEG.add(FIREG);FIREG.visible=false;for(let i=0;i<6;i++){const c=new T.Mesh(new T.ConeGeometry(.7,2,6),M(i%2?0xff8f1a:0xffd23c));c.position.set(-4+i*1.6,5.2,(i%3-1)*1.2);FIREG.add(c)}
+function startInc(){if(INC||s.day<2)return;const o=['fire','thief','injury'].filter(t=>t=='fire'?s.fireDay<s.day:t=='thief'?s.safeDay<s.day&&!(has('guard')&&Math.random()<.7):C.some(c=>c.st=='stay')||W.length>0);if(!o.length)return;const t=o[Math.random()*o.length|0],d=IT[t];
+ INC={t,left:d.lim+(t=='fire'&&s.inv.ext>0?8:0),eta:0,call:null,v:null};
+ if(t=='fire'){FIREG.visible=true;FIREG.position.y=s.done>=7?2.8:0}
+ if(t=='thief'){THF={x:-14,z:18,ry:0,ph:0,mv:false,path:[],g:NPC(0x222222,0x000000)};THF.path=[[0,6],[0,2.7],[1,-1]]}
+ if(t=='injury'){const c=C.find(c=>c.st=='stay');INC.v=c?{c:c.id}:{w:W[0].role}}
+ toast('🚨 '+d.n+' Tap the red SOS button!');sfx();$('sos').classList.add('on')}
+function callSvc(k){if(!INC)return toast('No emergency right now');if(IT[INC.t].svc!=k)return toast('That service cannot help with this emergency');if(INC.call)return;INC.call=k;INC.eta=6;const v=SV[k];RV=car(v,-40,18,HOMEG);RV.userData={leave:0,life:0};toast(v.e+' '+v.n+' is on the way!');pg()}
+function endInc(ok){const d=IT[INC.t];if(ok){toast('✅ '+d.n.replace('!','')+' resolved. Well done!');sfx()}else damage();
+ FIREG.visible=false;if(THF){THF.path=[[0,6],[-14,18]];THF.leaving=1}INC=null;incT=rnd(55,110);$('sos').classList.remove('on');$('sos').textContent='🚨';if(RV)RV.userData.leave=1;pg()}
+function damage(){const t=INC.t;let m='';
+ if(t=='fire'){const k=s.inv.ext>0&&(s.inv.ext--,1),l=Math.min(s.cash,Math.round((2500+s.done*350)*(k?.4:1))),f=FACS(),fx=f[Math.random()*f.length|0];s.cash-=l;s.bad[fx.id]=true;m='Fire damage ₱'+fmt(l)+', '+fx.n+' is broken.'}
+ else if(t=='thief'){const l=Math.min(s.cash,Math.max(500,Math.round(s.cash*.08)));s.cash-=l;m='The thief stole ₱'+fmt(l)+'!'}
+ else{const k=s.inv.aid>0&&(s.inv.aid--,1),l=Math.min(s.cash,Math.round(1800*(k?.5:1)));s.cash-=l;m='Medical bill ₱'+fmt(l)+'.'}
+ rate_(2);toast('💥 No help arrived in time. '+m);save()}
+function incStep(dt){
+ if(!INC){incT-=dt;if(incT<=0){incT=rnd(55,110);startInc()}}else{INC.left-=dt;if(INC.call){INC.eta-=dt;if(INC.eta<=0)endInc(true)}else if(INC.left<=0)endInc(false)}
+ if(RV){const u=RV.userData,tx=u.leave?-40:-5,tz=u.leave?18:15,dx=tx-RV.position.x,dz=tz-RV.position.z,d=Math.hypot(dx,dz);if(d>.3){const v=Math.min(d,(u.leave?12:10)*dt);RV.position.x+=dx/d*v;RV.position.z+=dz/d*v;RV.rotation.y=Math.atan2(dx,dz)}else if(u.leave){RV.parent&&RV.parent.remove(RV);RV=null}}
+ if(FIREG.visible)FIREG.children.forEach((c,i)=>{c.scale.y=1+.35*Math.sin(performance.now()/90+i)});
+ if(THF){THF.mv=false;if(step(THF,dt,3)&&THF.leaving){THF.g.parent&&THF.g.parent.remove(THF.g);tgx(THF);THF=null}else place(THF,dt)}
+ $('sos').textContent=INC?'🚨 '+Math.ceil(INC.left)+'s':'🚨'}
+function pgSos(){let h=head('🚨 Emergency');if(!INC)h+='<p class="note">No emergency right now. If something happens, call the right service here: <b>Police</b> for robbery, <b>Hospital</b> for injuries, <b>Fire Fighters</b> for fires.</p>';
+ else{const d=IT[INC.t];h+=`<p><b>${d.e} ${d.n}</b> · ${Math.ceil(INC.left)}s left</p>`+(INC.call?`<p class="note">${SV[INC.call].e} ${SV[INC.call].n} on the way: ${Math.max(0,Math.ceil(INC.eta))}s</p>`:'<p class="note">Choose who to call:</p>')}
+ Object.keys(SV).forEach(k=>h+=`<button class="go ${INC&&IT[INC.t].svc==k?'':'alt'}" onclick="callSvc('${k}')">${SV[k].e} Call ${SV[k].n}</button>`);
+ return h+`<p class="note">Tip: buy a 🧯 fire extinguisher and 🩹 first-aid kit to reduce damage. Hire a guard or build CCTV to stop thieves.</p>`}
+pgSos.live=1;
+
 /* ---------- PWA + hooks ---------- */
+window.presencePayload=()=>({x:AV.x,z:AV.z,loc:mode});
 window.Harong={bootTs,get:()=>s,set:x=>{s=norm(x);syncStaff();lotsRender();save()},
- visit:(n,nm)=>{vis=true;visT=0;house(n);[AV,...C,...W].forEach(e=>e.g.visible=false);LG.visible=false;$('vtxt').textContent='Visiting '+nm+'’s harong';$('vbar').style.display='flex';$('lab').style.display='none'}};
-$('vback').onclick=()=>{vis=false;house(s.done);[AV,...C,...W].forEach(e=>e.g.visible=true);LG.visible=true;$('vbar').style.display='none';$('lab').style.display=''};
+ visit:(n,nm)=>{vis=true;visT=0;house(n);[AV,...C,...W].forEach(e=>e.g.visible=false);LG.visible=false;$('vtxt').textContent='Visiting '+nm+'’s harong';$('vbar').style.display='flex';$('lab').style.display='none'},
+ setUid:u=>{myUid=u;VH=null},setOthers:list=>{OTHERS=list},
+ receiveGift:g=>{GIFTS.push(g);toast('🎁 New gift from '+g.from+'! Open Dashboard to claim it.')},
+ visitUid:(uid,name)=>{if(uid==myUid)return;VW={uid,name};VH={x:0,z:10,ry:0,ph:0,mv:false,g:NPC(0xffc233,0x222222)};HOMEG.add(VH.g);VH.g.visible=false;
+  vis=true;visT=0;house(0);[AV,...C,...W].forEach(e=>e.g.visible=false);if(LG)LG.visible=false;$('vtxt').textContent='Visiting '+name+'’s harong (waiting for host data)';$('vbar').style.display='flex';$('lab').style.display='none';if(window.watchHost)window.watchHost(uid)},
+ renderHost:st=>{try{const st2=norm(JSON.parse(st));house(st2.done);$('vtxt').textContent='Visiting '+(VW?VW.name:'player')+'’s harong · Level '+st2.done}catch(e){}}};
+$('vback').onclick=()=>{vis=false;if(VH){VH.g.parent&&VH.g.parent.remove(VH.g);tgx(VH);VH=null;VW=null;if(window.unwatchHost)window.unwatchHost()}house(s.done);syncStaff();lotsRender();[AV,...C,...W].forEach(e=>e.g.visible=true);LG.visible=true;$('vbar').style.display='none';$('lab').style.display=''};
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 let dip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('inst').hidden=false});
 $('inst').onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$('inst').hidden=true};addEventListener('appinstalled',()=>{$('inst').hidden=true;toast('Harong installed')});
@@ -367,8 +525,12 @@ document.addEventListener('visibilitychange',()=>{if(AC)document.hidden?AC.suspe
 
 
 
+
+
+
 /* ---------- start ---------- */
 const away=(Date.now()-s.ts)/1000;
+if(!s.tour){openM(pgTour)}
 resize();house(s.done);syncStaff();lotsRender();AV.g.position.set(AV.x,0,AV.z);
 if(!fresh&&away>60){const days=Math.floor(Math.min(away,1800)/60),g=Math.round(days*cap()*rate()*.6),w=days*s.staff.reduce((a,r)=>a+ROLES.find(x=>x.r==r).w,0),net=Math.max(0,g-w);s.cash+=net;if(net>0)toast('Welcome back! Guests paid ₱'+fmt(net)+' while you were away')}
 save();requestAnimationFrame(loop);
@@ -377,7 +539,7 @@ save();requestAnimationFrame(loop);
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,collection,query,orderBy,limit,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,updateDoc,deleteField,onSnapshot,collection,query,orderBy,limit,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyAAIRyAD0koM9EWoA92vn3c1Iu39s_tE9U",
   authDomain: "harong-246de.firebaseapp.com",
@@ -387,44 +549,64 @@ const firebaseConfig = {
   appId: "1:46039682273:web:824a5f61a6289d26fabba0",
   measurementId: "G-TZHG76KTFM"
 };
-/* Cloud save: anonymous sign-in, one Firestore document per player at users/{uid}. Local save always works offline. */
+/* Cloud save + realtime presence + gifts + leaderboard, one Firestore doc per player at users/{uid} and profiles/{uid}. Local save always works offline. */
 try{
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
-let uid=null,timer=null,synced=false;
 const H=window.Harong,$=id=>document.getElementById(id),fmt=n=>Math.round(n).toLocaleString('en-PH');
-let name='';try{name=localStorage.getItem('harong-name')||''}catch(e){}
-const score=st=>Math.round(st.cash+st.done*6000),rating=st=>st.qs&&st.qs.length?Math.round((st.rep??3)*20):60;
-async function pushProfile(){if(!uid||!name)return;const st=H.get();await setDoc(doc(db,'profiles',uid),{name,score:score(st),done:st.done,rating:rating(st),day:st.day,updated:Date.now()})}
+let uid=null,timer=null,presTimer=null,unsubPres=null,unsubGift=null,unsubHost=null,name='';
+try{name=localStorage.getItem('harong-name')||''}catch(e){}
+window.myName=name;
+const score=st=>Math.round(st.cash+st.done*6000+(st.lots?Object.keys(st.lots).length*8000:0)),rating=st=>st.qs&&st.qs.length?Math.round(st.qs.reduce((a,b)=>a+b,0)/st.qs.length):Math.round((st.rep||3)*20),
+ asset=st=>Math.round(st.cash*.2+st.done*25000+(st.items?st.items.length*8000:0)+(st.veh?st.veh.reduce((a,id)=>a+1,0)*120000:0)+(st.lots?Object.keys(st.lots).length*60000:0));
 async function push(){timer=null;if(!uid||!navigator.onLine)return;try{const st=H.get();await setDoc(doc(db,'users',uid),{state:JSON.stringify(st),ts:st.ts,updated:Date.now()});await pushProfile()}catch(e){}}
+async function pushProfile(){if(!uid||!name)return;const st=H.get();await setDoc(doc(db,'profiles',uid),{name,score:score(st),asset:asset(st),done:st.done,rating:rating(st),day:st.day,updated:Date.now()})}
 window.cloudSave=()=>{if(uid&&!timer)timer=setTimeout(push,60000)};
-addEventListener('pagehide',()=>{if(timer){clearTimeout(timer);push()}});
+addEventListener('pagehide',()=>{if(timer){clearTimeout(timer);push()}try{if(uid)setDoc(doc(db,'presence',uid),{x:0,y:0,loc:'offline',name,t:Date.now()})}catch(e){}});
 addEventListener('online',push);
+/* ---- presence: broadcast own location every 4s, subscribe to everyone's ---- */
+function startPresence(){
+ presTimer=setInterval(async()=>{if(!uid||!name||!navigator.onLine)return;const p=window.presencePayload&&window.presencePayload();if(!p)return;
+  try{await setDoc(doc(db,'presence',uid),{uid,name,x:Math.round(p.x*10)/10,z:Math.round(p.z*10)/10,loc:p.loc,t:Date.now()})}catch(e){}},4000);
+ window.presenceNow=()=>{if(!uid||!name)return;const p=window.presencePayload&&window.presencePayload();if(!p)return;setDoc(doc(db,'presence',uid),{uid,name,x:p.x,z:p.z,loc:p.loc,t:Date.now()}).catch(()=>{})};
+ try{unsubPres=onSnapshot(collection(db,'presence'),snap=>{const list=[];snap.forEach(d=>{if(d.id!==uid){const v=d.data();if(Date.now()-v.t<90000)list.push(v)}});H.setOthers&&H.setOthers(list)})}catch(e){}
+}
+/* ---- gifts inbox: listen for gifts sent to me ---- */
+function startGifts(){try{unsubGift=onSnapshot(collection(db,'users',uid,'gifts'),snap=>{snap.docChanges().forEach(ch=>{if(ch.type==='added'){const g=ch.doc.data();g._id=ch.doc.id;H.receiveGift&&H.receiveGift(g)}})})}catch(e){}}
+window.sendGiftCloud=async(toUid,gift)=>{if(!uid)return;try{await setDoc(doc(collection(db,'users',toUid,'gifts')),gift)}catch(e){}};
+window.ackGift=async i=>{};
+/* ---- watch a host's live state while visiting ---- */
+window.watchHost=hostUid=>{if(unsubHost)unsubHost();try{unsubHost=onSnapshot(doc(db,'users',hostUid),snap=>{if(snap.exists())H.renderHost&&H.renderHost(snap.data().state)})}catch(e){}};
+window.unwatchHost=()=>{if(unsubHost){unsubHost();unsubHost=null}};
 onAuthStateChanged(auth,async u=>{
  if(!u){signInAnonymously(auth).catch(()=>{});return}
- uid=u.uid;
+ uid=u.uid;H.setUid&&H.setUid(uid);
  try{const snap=await getDoc(doc(db,'users',uid));
-  if(snap.exists()){const c=snap.data();if(c.state&&c.ts>window.Harong.bootTs){window.Harong.set(JSON.parse(c.state))}}
-  if(!name){const p=await getDoc(doc(db,'profiles',uid));if(p.exists()){name=p.data().name;try{localStorage.setItem('harong-name',name)}catch(e){}}}
-  synced=true;push()}catch(e){}
+  if(snap.exists()){const c=snap.data();if(c.state&&c.ts>H.bootTs){H.set(JSON.parse(c.state))}}
+  if(!name){const p=await getDoc(doc(db,'profiles',uid));if(p.exists()){name=p.data().name;window.myName=name;try{localStorage.setItem('harong-name',name)}catch(e){}}}
+  push();startPresence();startGifts()}catch(e){}
 });
-
-async function openLB(){
- $('lbm').classList.add('open');$('nmin').value=name;const L=$('lbl');L.textContent='Loading…';
- try{const snap=await getDocs(query(collection(db,'profiles'),orderBy('score','desc'),limit(20)));L.textContent='';let i=0;
-  if(snap.empty)L.textContent='No players yet. Save a name to be the first.';
-  snap.forEach(d=>{const p=d.data();i++;const r=document.createElement('div');r.className='row'+(d.id===uid?' me':'');
-   const rk=document.createElement('span');rk.className='rk';rk.textContent=i;
+/* ---- leaderboard with 3 categories ---- */
+async function fetchTop(field,lim){const snap=await getDocs(query(collection(db,'profiles'),orderBy(field,'desc'),limit(lim)));const out=[];snap.forEach(d=>out.push({id:d.id,...d.data()}));return out}
+window.openLBtab=async(tab)=>{const L=$('lbl');L.textContent='Loading…';
+ try{const field=tab=='earn'?'score':tab=='star'?'rating':'asset',rows=await fetchTop(field,20);L.textContent='';
+  if(!rows.length)L.textContent='No players yet. Save a name to be the first.';
+  rows.forEach((p,i)=>{const r=document.createElement('div');r.className='row'+(p.id===uid?' me':'');
+   const rk=document.createElement('span');rk.className='rk';rk.textContent=i+1;
    const nm=document.createElement('span');nm.className='nm';nm.textContent=p.name;
-   const sm=document.createElement('small');sm.textContent='₱'+fmt(p.score)+' · '+'Level '+p.done+' · '+(p.rating/20).toFixed(1)+'★';nm.appendChild(sm);
-   r.append(rk,nm);
-   if(d.id!==uid){const b=document.createElement('button');b.className='mini';b.textContent='Visit';b.onclick=()=>{$('lbm').classList.remove('open');H.visit(p.done,p.name)};r.appendChild(b)}
+   const sm=document.createElement('small');
+   sm.textContent=tab=='earn'?('₱'+fmt(p.score)+' net worth · Level '+p.done):tab=='star'?((p.rating/20).toFixed(1)+'★ · Level '+p.done):('₱'+fmt(p.asset||0)+' in assets · Level '+p.done);
+   nm.appendChild(sm);r.append(rk,nm);
+   if(p.id!==uid){const b=document.createElement('button');b.className='mini';b.textContent='Visit';b.onclick=()=>{$('lbm').classList.remove('open');H.visitUid?H.visitUid(p.id,p.name):H.visit(p.done,p.name)};r.appendChild(b)}
    L.appendChild(r)})}
- catch(e){L.textContent=navigator.onLine?'Could not load the leaderboard. Check the Firestore rules.':'The leaderboard needs an internet connection.'}}
+ catch(e){L.textContent=navigator.onLine?'Could not load the leaderboard. Check the Firestore rules.':'The leaderboard needs an internet connection.'}};
+function openLB(){$('lbm').classList.add('open');$('nmin').value=name;openLBtab('earn');
+ document.querySelectorAll('#lbtabs .chip').forEach(b=>b.onclick=()=>{document.querySelectorAll('#lbtabs .chip').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');openLBtab(b.dataset.tab)})}
 $('lb').onclick=openLB;$('lbx').onclick=()=>$('lbm').classList.remove('open');
 $('nmsv').onclick=async()=>{const v=$('nmin').value.replace(/[^\p{L}\p{N} ._-]/gu,'').trim();
  if(v.length<2){$('nmin').focus();return}
- name=v;try{localStorage.setItem('harong-name',name)}catch(e){}
+ name=v;window.myName=name;try{localStorage.setItem('harong-name',name)}catch(e){}
  try{await pushProfile()}catch(e){}openLB()};
 }catch(e){console.warn('Cloud save unavailable',e)}
+
 </script>
 </body></html>

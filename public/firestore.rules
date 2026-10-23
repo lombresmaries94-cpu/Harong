@@ -5,20 +5,43 @@ service cloud.firestore {
     // Private save: only the owner
     match /users/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Gifts sent to this player: anyone signed in can drop a gift in,
+      // only the owner can read, list or delete their own inbox.
+      match /gifts/{giftId} {
+        allow read, delete: if request.auth != null && request.auth.uid == uid;
+        allow create: if request.auth != null && request.auth.uid != uid
+          && request.resource.data.keys().hasOnly(['e','label','t','k','q','state','from'])
+          && request.resource.data.label is string && request.resource.data.label.size() <= 60
+          && request.resource.data.from is string && request.resource.data.from.size() <= 20;
+      }
     }
 
     // Public profile for the leaderboard: anyone signed in can read, only the owner can write
     match /profiles/{uid} {
       allow read: if request.auth != null;
       allow create, update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['name','score','done','rating','day','updated'])
+        && request.resource.data.keys().hasOnly(['name','score','asset','done','rating','day','updated'])
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 16
-        && request.resource.data.score is number && request.resource.data.score >= 0 && request.resource.data.score <= 100000000
+        && request.resource.data.score is number && request.resource.data.score >= 0 && request.resource.data.score <= 1000000000
+        && request.resource.data.asset is number && request.resource.data.asset >= 0 && request.resource.data.asset <= 1000000000
         && request.resource.data.done is int && request.resource.data.done >= 0 && request.resource.data.done <= 20
         && request.resource.data.rating is number && request.resource.data.rating >= 0 && request.resource.data.rating <= 100
         && request.resource.data.day is number && request.resource.data.updated is number;
       allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Live location for real-time visiting: anyone signed in can read everyone's presence,
+    // only the owner can write their own.
+    match /presence/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['uid','name','x','z','loc','t'])
+        && request.resource.data.x is number && request.resource.data.x >= -200 && request.resource.data.x <= 200
+        && request.resource.data.z is number && request.resource.data.z >= -200 && request.resource.data.z <= 200
+        && request.resource.data.loc is string && request.resource.data.loc.size() <= 60
+        && request.resource.data.t is number;
     }
   }
 }
